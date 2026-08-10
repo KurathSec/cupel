@@ -199,6 +199,11 @@ def cmd_clauses_defs(args) -> int:
         print(f"  {f['path'].split('/')[-1]:22s} {f['doc']}  {len(ds):>3d} definitions")
     lockmod.save(entries)
 
+    adj = list(jsonl.read(pinsmod.REPO / d1b.ADJUDICATIONS))
+    n_adj = d1b.apply_adjudications(alld, adj)
+    if n_adj:
+        print(f"\n  applied {n_adj} recorded adjudication(s)")
+
     inb = [d for d in alld if d.proposed_surface == "api_boundary_checkable"]
     untagged = [d for d in inb if not d.tagged]
     undecided = [d for d in alld if d.proposed_surface is None]

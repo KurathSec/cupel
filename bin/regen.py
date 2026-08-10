@@ -378,19 +378,32 @@ def headline(state: dict) -> int:
             print(f"    - {b}")
         return 3
 
-    c, v = state["clauses"], state["verdicts"]
+    cand, v = state["candidates"], state["verdicts"]
     pins = state["pins"]["pins"]
-    docs = ", ".join(f"{d} n={n}" for d, n in sorted(c["by_doc"].items()))
+
+    # The denominator of the coverage fraction is the set of clauses that have a
+    # VERDICT, not the candidate set. Printing "26 candidates" beside "3 of 4
+    # exercised" invites the reader to carry 26 into a fraction computed over 4,
+    # which is the same aggregation defect as pooling releases and is worse here
+    # because it is the headline.
+    measured = max((p["n_clauses"] for p in v["per_release"].values()), default=0)
+    unmeasured = cand["n_in_scope"] - measured
     print(
-        f"  Of the {c['n_in_scope']} API-boundary-checkable normative clauses derived from\n"
-        f"  cryptol-specs @{pins.get('cryptol_specs', '?')[:12]} for FIPS 203 and FIPS 204\n"
-        f"  ({docs}; {c['n_in_scope']} in scope of {c['n_extracted']} extracted),\n"
-        f"  {v['n_killed']} are exercised by the ACVP vector set at\n"
-        f"  ACVP-Server @{pins.get('acvp_server', '?')[:12]}\n"
-        f"  ({v['n_killed']} killed, {v['n_survived']} not exercised, {v['n_inconclusive']} inconclusive;\n"
-        f"  {v['n_witnessed']} survivors carry a constructed witness).\n"
-        f"  FIPS 205: {NA} (no specification-derived clause source)."
+        f"  Of the {cand['n_in_scope']} API-boundary-checkable clause candidates derived from\n"
+        f"  definitions in cryptol-specs @{pins.get('cryptol_specs', '?')[:12]}\n"
+        f"  ({cand['n_in_scope']} of {cand['n_candidates']} definitions at the module surface;\n"
+        f"  {cand['n_untagged_in_scope']} of them carry no citation, so a tag-based derivation\n"
+        f"  cannot see them), {measured} have been put to a mutation and have a verdict.\n"
+        f"  The remaining {unmeasured} are UNMEASURED: no mutation has been written for\n"
+        f"  them, so they are neither exercised nor unexercised, and must not be\n"
+        f"  folded into either count.\n"
+        f"  Against ACVP-Server @{pins.get('acvp_server', '?')[:12]}, over the {measured} measured:"
     )
+    for release, per in sorted(v["per_release"].items()):
+        print(f"    {release}: " + Rate(per["n_killed"], per["n_clauses"],
+                                        "exercised of those measured").render())
+    print(f"  {v['n_witnessed']} of {v['n_survivors']} survivors carry a constructed witness.")
+    print(f"  FIPS 205 denominator: {NA} (no specification-derived clause source).")
     return 0
 
 

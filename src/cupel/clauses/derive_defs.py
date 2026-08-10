@@ -230,7 +230,11 @@ def extract(source: str, path: str) -> list[Definition]:
 
         # A binding whose signature was already recorded is the same clause.
         qual_key = f"{prefix}::{name}" if prefix else name
-        if kind == "binding" and qual_key in seen_sig:
+        # A definition is one clause however it is spelled. Cryptol writes some
+        # as a signature followed by `NAME args = ...` and others as a signature
+        # followed by `property NAME args = ...`; deduping only the first form
+        # counted six identities twice.
+        if kind in ("binding", "property") and qual_key in seen_sig:
             continue
 
         comment, style = _preceding_comment(lines, n)
@@ -249,6 +253,28 @@ def extract(source: str, path: str) -> list[Definition]:
             seen_sig[qualified] = d
         out.append(d)
     return out
+
+
+ADJUDICATIONS = "data/clauses/overlay/adjudications.jsonl"
+
+
+def apply_adjudications(defs: list[Definition], records: list[dict]) -> int:
+    """Overlay recorded decisions on top of the proposals.
+
+    A decision beats a heuristic. Widening the heuristic until it happened to
+    agree would hide the judgement instead of recording it.
+    """
+    by_name = {r["candidate"]: r for r in records}
+    n = 0
+    for d in defs:
+        rec = by_name.get(d.name) or by_name.get(d.name.split("::")[-1])
+        if not rec:
+            continue
+        d.proposed_surface = rec["decision"]
+        d.proposed_rule = rec["surface_rule"]
+        d.proposed_why = "adjudicated: " + rec["reason"].split(".")[0]
+        n += 1
+    return n
 
 
 def propose(defs: list[Definition]) -> None:
