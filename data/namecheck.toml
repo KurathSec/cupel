@@ -1,0 +1,68 @@
+# Vocabulary this repository must never contain, and why.
+#
+# The author has a separate double-anonymous submission under review. That
+# project's rule is specific: no citation path may exist into it, "including via
+# a public artifact cited together with a claim it makes". A validation-coverage
+# meter has no reason to reference a code-REDACTED-TERM-4 tool, so the practical risk
+# is near zero, but reusing its vocabulary would manufacture the path that its
+# rule forbids. This file makes the guarantee mechanical instead of remembered.
+#
+# `bin/namecheck.py` skips this file and itself. Everything else tracked by git
+# is scanned, plus commit messages when a range is given.
+
+[[banned]]
+term = "REDACTED-TERM-2"
+reason = "the project itself, by name"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-0"
+reason = "that project's own bolded self-description; a distinctive phrase"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-1"
+reason = "its specification vocabulary"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-3"
+reason = "the REDACTED-TERM-4 feature set it implements; no reason to appear here"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-4"
+reason = "the problem domain it owns; unrelated to validation coverage"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-6"
+reason = "REDACTED-TERM-4 corpus, adjacent to a pre-registration that must not be touched"
+regex = false
+
+[[banned]]
+term = "REDACTED-TERM-5"
+reason = "its parsing substrate; cupel uses anchored rewrites and needs no grammar"
+regex = false
+
+# `ruling` is the strongest fingerprint of the three, because cupel independently
+# wants the same concept: a numbered, adjudicated decision that a computation
+# cites. It is deliberately renamed here. Adjudicated decisions in this
+# repository are SCOPE-nn scope rules and REPAIR-nn source repairs.
+[[banned]]
+term = '\brulings?\b'
+reason = "its term for a numbered adjudicated decision; use scope rule or source repair"
+regex = true
+
+[[banned]]
+term = "—"
+reason = "em-dash; the author's writing rule forbids them in prose, code and commit messages"
+regex = false
+
+[skip]
+# Paths excluded from the scan. Keep this list short and justified.
+paths = [
+  "data/namecheck.toml",
+  "bin/namecheck.py",
+  "tests/unit/test_namecheck.py",
+]

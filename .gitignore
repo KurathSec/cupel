@@ -1,0 +1,24 @@
+# Build and packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Fetched upstream sources and vector blobs are never committed. They are
+# reproduced from data/pins.toml and data/vectors/lock.toml, and the recorded
+# hash proves what was run even if upstream force-pushes.
+vendor/
+.cache/
+cache/
+
+# Local scratch
+*.local
+scratch/

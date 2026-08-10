@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # The vocabulary firewall runs first and on every commit. It needs no
+  # dependencies and no build, so there is no excuse for it to be skipped.
+  namecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Forbidden vocabulary in tracked files
+        run: python bin/namecheck.py
+      - name: Forbidden vocabulary in commit messages
+        if: github.event_name == 'pull_request'
+        run: python bin/namecheck.py --commits origin/${{ github.base_ref }}..HEAD
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Test
+        run: pytest
+
+  # A number does not exist until a committed script regenerates it from
+  # committed data. This job proves the committed results still regenerate.
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Every quotable number, with its n
+        run: python bin/regen.py
+      - name: Headline must refuse until its preconditions hold
+        run: |
+          set +e
+          python bin/regen.py --headline
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ] && [ "$code" -ne 3 ]; then
+            echo "regen --headline exited $code, expected 0 (printed) or 3 (refused)"
+            exit 1
+          fi

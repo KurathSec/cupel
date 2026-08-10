@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cupel"
+dynamic = ["version"]
+description = "A coverage meter over the ACVP validation path for FIPS 203, 204 and 205"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["acvp", "fips-203", "fips-204", "fips-205", "ml-kem", "ml-dsa", "slh-dsa", "test-adequacy"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Security :: Cryptography",
+]
+
+# Deliberately empty. A reviewer must be able to install this with no compiled
+# dependency and no lockfile resolution. Everything below is stdlib.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "jsonschema>=4"]
+
+[project.scripts]
+cupel = "cupel.cli.main:main"
+
+[tool.hatch.version]
+path = "src/cupel/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cupel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
