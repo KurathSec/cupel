@@ -1,6 +1,6 @@
 {"control_id":"PC-1","note":"0 of 639 valid cases violate something","passed":true,"schema":"control/1","skipped":false,"title":"no valid case violates any clause"}
 {"control_id":"PC-3","note":"pre-fix ABSENT, post-fix COVERED","passed":true,"schema":"control/1","skipped":false,"title":"ground-truth replay of ACVP-Server #460"}
-{"control_id":"MUT-1","note":"0 of 5 anchors drifted","passed":true,"schema":"control/1","skipped":false,"title":"every mutation anchor matches its pinned source"}
+{"control_id":"MUT-1","note":"0 of 8 anchors drifted","passed":true,"schema":"control/1","skipped":false,"title":"every mutation anchor matches its pinned source"}
 {"control_id":"MUT-5","note":"0 of 4 sentinel runs survived","passed":true,"schema":"control/1","skipped":false,"title":"every declared sentinel was killed"}
 {"control_id":"WIT-1","note":"0 of 13 witnesses disagree with their own record","passed":true,"schema":"control/1","skipped":false,"title":"every witness violates exactly the clause it claims"}
 {"control_id":"NA-1","note":"Rate and mean distinguish undefined from zero","passed":true,"schema":"control/1","skipped":false,"title":"an empty aggregation prints NA rather than 0"}

@@ -20,6 +20,31 @@ no short-circuiting. From it:
 Only the first is a statement about the vector set alone. The second is a
 statement about the vector set that becomes a statement about an implementation
 once check ordering is known, which is what the mutation spine supplies.
+
+WHAT A COVERED COLUMN DOES AND DOES NOT PREDICT
+-----------------------------------------------
+An ABSENT column is decisive: no case violates the clause, so nothing that
+deletes the check can be caught, and the mutant survives necessarily.
+
+A COVERED column is NOT decisive in the other direction, and assuming it was
+produced a wrong prediction here. `fips204.alg15.hint-trailing-zeros` shows 20
+isolated violations at r2026-07-31, so deleting the check was predicted to be
+caught. The mutant survived.
+
+The reason is that "isolated" means isolated among the clauses this battery
+MODELS, and the FIPS 204 commitment hash is deliberately not modelled because
+computing it needs the whole verification path. That check is a universal
+backstop for signature verification: any perturbation of a signature changes w1
+and therefore changes c-tilde, so every malformed-signature case is rejected by
+it regardless of which structural clause is deleted upstream. Removing the
+trailing-zeros check does not make those 20 cases verify; it just moves where
+they are rejected.
+
+So the matrix predicts survival soundly and predicts death only conditionally.
+A clause whose violations are all subsumed by a downstream check cannot be
+exercised in the sense that matters, however many cases violate it, and the
+mutation is what settles that. The two disagreeing is the instrument working,
+not the instrument breaking.
 """
 
 from __future__ import annotations

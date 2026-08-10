@@ -1,0 +1,30 @@
+schema = "mutation/1"
+mutation_id = "mldsa-native:fips204.alg15.hint-weight:neutralize"
+clause_id = "fips204.alg15.hint-weight"
+target = "mldsa-native"
+target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+state = "located"
+class = "neutralize_predicate"
+intent = "Stop rejecting a hint tally that is non-monotone or exceeds omega."
+kill_mode = "reject_flip"
+located_by = "FIPS 204 Algorithm 21 HintBitUnpack, the running tally and omega bound"
+
+[[edit]]
+path = "mldsa/src/packing.c"
+anchor = """
+  if (new_hint_count < old_hint_count || new_hint_count > MLDSA_OMEGA)
+"""
+replacement = """
+  if (0 && (new_hint_count < old_hint_count || new_hint_count > MLDSA_OMEGA))
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+witness_reason_labels = ["modified signature - hint"]
+prediction = """
+SURVIVES. The violation matrix reports this column ABSENT: no case in the corpus
+violates the omega weight bound, and the ModifyHint disposition perturbs the
+tally by one, which the matrix shows lands on ordering or trailing-zeros
+instead. A witness for it already exists. Registered before the run.
+"""

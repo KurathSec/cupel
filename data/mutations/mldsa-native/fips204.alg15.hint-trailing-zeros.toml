@@ -1,0 +1,27 @@
+schema = "mutation/1"
+mutation_id = "mldsa-native:fips204.alg15.hint-trailing-zeros:neutralize"
+clause_id = "fips204.alg15.hint-trailing-zeros"
+target = "mldsa-native"
+target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+state = "located"
+class = "neutralize_predicate"
+intent = "Stop rejecting non-zero padding beyond the declared hint count."
+kill_mode = "reject_flip"
+
+[[edit]]
+path = "mldsa/src/packing.c"
+anchor = """
+      if (packed_hints[j] != 0)
+"""
+replacement = """
+      if (0 && packed_hints[j] != 0)
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+witness_reason_labels = ["modified signature - hint"]
+prediction = """
+DIES. The matrix reports 20 isolated violations at r2026-07-31. Registered
+before the run.
+"""
