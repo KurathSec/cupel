@@ -177,15 +177,31 @@ def _wit2():
     # recorded row naming a (clause, parameter set) that no constructed
     # candidate covers is a row about a witness nobody built.
     n_recorded = sum(1 for f in declared.values() if f.get("origin") == "recorded")
-    constructed = {(w.get("clause_id"), w.get("param_set"))
-                   for w in jsonl.read(REPO / "witness" / "direct.jsonl")}
-    orphans = 0
+    # Joining on (clause, parameter set) alone was too weak: it could not see
+    # 45 rows where the hand-recorded file claimed isolation the battery does
+    # not grant. Those rows predated the fix that gates a clause's
+    # applicability on the function under test, so they carried the old
+    # field-presence verdict. The join is now on the full construction key and
+    # compares the battery's own verdict fields.
+    constructed = {}
+    for w in jsonl.read(REPO / "witness" / "direct.jsonl"):
+        constructed[(w.get("clause_id"), w.get("param_set"),
+                     w.get("derived_from"))] = w
+    orphans = disagree = 0
     if constructed:
         for w in jsonl.read(REPO / "witness" / "validated.jsonl"):
-            if (w.get("clause_id"), w.get("param_set")) not in constructed:
+            key = (w.get("clause_id"), w.get("param_set"), w.get("derived_from"))
+            src = constructed.get(key)
+            if src is None:
                 orphans += 1
+            elif (src.get("violates") != w.get("violates")
+                  or bool(src.get("isolates_clause")) != bool(w.get("isolates_clause"))):
+                disagree += 1
     if orphans:
         problems.append(f"{orphans} recorded row(s) join to no constructed candidate")
+    if disagree:
+        problems.append(f"{disagree} recorded row(s) disagree with the battery "
+                        f"about what they violate")
     if problems:
         return False, "; ".join(problems)
     return True, (f"{len(present)} witness file(s) declared, {n_recorded} of them "

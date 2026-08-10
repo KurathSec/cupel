@@ -181,6 +181,48 @@ def cmd_clauses_disposition(args) -> int:
     return 0
 
 
+def cmd_clauses_spec(args) -> int:
+    """Derivation D1: the tag-based extraction, retained as provenance.
+
+    D1 was retracted as a clause set, because tag presence turned out not to
+    track boundary-checkability. It is still a hard precondition on the
+    headline, and its output file was committed once and written by nothing:
+    the module existed, exposed extract() and classify(), and was wired to no
+    command. So the artifact gated its headline on a file it could not
+    reproduce, which is the project's own rule broken at a gate. Found by
+    artifact evaluation.
+    """
+    from ..clauses import derive_spec as d1
+
+    entries = lockmod.load()
+    pins = pinsmod.load()
+    cs = pins["cryptol_specs"]
+    repairs = d1.load_repairs()
+    clauses = []
+    for spec in cs.get("files", []):
+        src = lockmod.ensure_source("cryptol-specs", cs["repo"], cs["commit"],
+                                    spec["path"], entries).decode("utf-8")
+        found, _stats = d1.extract(src, spec["path"], spec["doc"], repairs)
+        clauses += found
+    lockmod.save(entries)
+
+    decided = d1.classify(clauses, d1.load_scope_rules())
+    print(f"cryptol-specs @ {cs['commit'][:12]}")
+    print(Rate(len(clauses), len(clauses), "docstrings carrying a FIPS citation").render())
+    by_doc: dict = {}
+    for c in clauses:
+        by_doc[c.doc] = by_doc.get(c.doc, 0) + 1
+    for doc in sorted(by_doc):
+        print(count(f"    {doc}", by_doc[doc]))
+    for rule in sorted(decided):
+        print(count(f"  {rule}", decided[rule]))
+
+    out = pinsmod.REPO / "data" / "clauses" / "generated" / "clauses.jsonl"
+    jsonl.write(out, [c.as_record() for c in clauses])
+    print(f"\nwrote {out.relative_to(pinsmod.REPO)} ({len(clauses)} rows)")
+    return 0
+
+
 def cmd_clauses_defs(args) -> int:
     """Derivation D1b: candidates from definitions rather than from tags."""
     from ..clauses import derive_defs as d1b
@@ -466,6 +508,15 @@ def cmd_measure(args) -> int:
     bad = {k: v for k, v in drift.items() if v}
     for k, v in bad.items():
         print(f"  ANCHOR DRIFT {k}: {v}", file=sys.stderr)
+    if bad:
+        # Dropping a drifted mutation and exiting 0 writes a verdicts file that
+        # is quietly missing a result. For a tool whose worst failure mode is a
+        # silently misapplied mutation, the command that produces the verdicts
+        # has to refuse rather than leave it to whoever remembers to run
+        # selfcheck afterwards.
+        print(f"cupel: {len(bad)} of {len(muts)} anchors drifted; refusing to "
+              f"measure against a moved target", file=sys.stderr)
+        return 2
     muts = [m for m in muts if not drift[m.mutation_id]]
 
     print(f"target {target}   {len(muts)} mutation(s)   releases {', '.join(releases)}\n")
@@ -759,6 +810,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_clauses_sites)
     p = csub.add_parser("reconcile", help="set the three derivations against each other")
     p.set_defaults(func=cmd_clauses_reconcile)
+    p = csub.add_parser("spec", help="derivation D1: tag-based extraction (provenance only)")
+    p.set_defaults(func=cmd_clauses_spec)
+
     p = csub.add_parser("defs", help="derivation D1b: candidates from definitions")
     p.set_defaults(func=cmd_clauses_defs)
     p = csub.add_parser("disposition", parents=[common],
