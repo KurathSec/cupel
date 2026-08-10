@@ -9,25 +9,29 @@ set actually exercises, and which ones an implementation could get wrong while s
 everything.
 
 cupel answers that as a measurement. Point it at an implementation and a vector set and it prints
-one row per API-boundary-checkable normative clause, with three booleans in each row, each
-carrying its `n`:
+one row per API-boundary-checkable normative clause, with two columns in each row, each carrying
+its `n`:
 
 | column | meaning |
 |---|---|
-| `implemented` | the check exists in the implementation |
-| `reachable` | it is reachable from the public API, read from the exported symbol table and public headers |
-| `exercised` | deleting exactly that check causes at least one mandated ACVP vector to fail |
+| `status` | the violation matrix column: `ABSENT` if no applicable case violates the clause, `MASKED` if every violating case also violates another modelled clause, `COVERED` if some case violates it alone |
+| `exercised` | deleting exactly that check from a real implementation causes at least one mandated ACVP vector to change verdict |
 
-The third is the one that does not exist elsewhere. The first two are cheap and are what make the
-third interpretable: a clause that is unimplemented and a clause that is implemented but untested
-are different findings with different remedies.
+The second is the one that does not exist elsewhere. The first is cheap and is what makes the
+second affordable: mutation means building a patched cryptographic library and replaying thousands
+of vectors, so the matrix decides where that is worth spending.
+
+A third column, `reachable`, was specified and is **not built**. It was to record whether a check
+is reachable from the public API, read from the exported symbol table and public headers.
+`src/cupel/reach/` is an empty package. Read every result as two columns.
 
 ## Status
 
-Early. The discipline layer and the vocabulary firewall are in place; the corpus census, the
-violation matrix and the mutation spine are being built. `bin/regen.py` prints `NA` for everything
-not yet measured and refuses to print a headline until its preconditions hold. That is the
-intended behaviour, not a gap.
+The corpus census, the violation matrix, the mutation spine, the witness constructions and the
+three clause derivations all run and write committed results. What is not built: the `reachable`
+column, the second implementation lineage described below, and a FIPS 205 clause source.
+`bin/regen.py` prints `NA` for everything not yet measured and refuses to print a headline until
+its preconditions hold. That is the intended behaviour and not a gap.
 
 ## How it works
 
@@ -44,8 +48,20 @@ input class is absent or merely masked. Everything falls out of `V`:
 - any input violating one clause and nothing else is the witness that would close the gap
 
 **Mutation on real implementations remains the oracle.** `V` predicts kill or survive; deleting
-the check from mlkem-native, mldsa-native or OpenSSL decides. Disagreement means the battery
-misencodes the specification, and that surfaces mechanically rather than in review.
+the check from mlkem-native or mldsa-native decides. Every prediction is registered in the mutation
+record before the run, and control PRED-1 fails if a verdict contradicts one without an `outcome`
+field acknowledging it.
+
+**The two directions are not equally sound, and that asymmetry was learned the hard way.** An
+`ABSENT` column predicts survival soundly: if no applicable case violates the clause, the branch is
+never taken and removing it cannot change a verdict. A `COVERED` column predicts death only
+conditionally, because "isolated" means isolated among the clauses the battery *models*. If an
+unmodelled check rejects the same case, removing the modelled one moves the rejection site without
+changing the verdict. This is not hypothetical: the registered prediction for
+`fips204.alg21.hint-trailing-zeros` was `DIES`, the mutant survived, and the reason is the FIPS 204
+commitment hash, a near-universal backstop the battery deliberately does not model. The failed
+prediction is left in `data/mutations/mldsa-native/` verbatim, with its `outcome` recorded beside
+it. Editing it would have destroyed the only property that made it a prediction.
 
 A clause counts as exercised if it is killed in **any** substrate, which maximises the numerator
 and so minimises the claimed gap.

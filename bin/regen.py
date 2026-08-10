@@ -44,6 +44,11 @@ def _rows(path: Path) -> list[dict]:
     return list(jsonl.read(path)) if path.exists() else []
 
 
+def _toml(path: Path) -> dict:
+    import tomllib
+    return tomllib.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
 def _rule(title: str) -> None:
     print(f"\n{title}")
     print("-" * len(title))
@@ -169,7 +174,83 @@ def section_disposition() -> dict:
     print(count("  members flagged planned_but_absent by upstream comment", len(planned)))
     for r in sorted(planned, key=lambda r: r.get("name", "")):
         print(f"      {r.get('enum')}::{r.get('name')}  {r.get('note', '')}")
-    return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned)}
+
+    # The bound. A generated vector set can contain at most as many distinct
+    # failure modes as its enum has negative members, however many cases it
+    # holds, so an enum with fewer negative members than the standard has
+    # mandated checks bounds coverage for every set the generator can emit.
+    print()
+    print("  Negative members against mandated checks. The mandated side is a")
+    print("  DECLARED input read from the standards by hand; see")
+    print("  data/clauses/mandated_checks.toml for the citation behind each count.")
+    spec = _toml(DATA / "clauses" / "mandated_checks.toml")
+    mandated = spec.get("function", [])
+    if not mandated:
+        print(f"  bound: {NA} (no mandated-check record)")
+        return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned),
+                "bound_defined": False}
+
+    # The effective count comes from results/disposition_bounds.jsonl, which
+    # already excludes members marked planned_but_absent. Re-deriving it here
+    # from D3 would have counted a declared-but-unimplemented member as a
+    # negative disposition, which is the opposite of what this bound measures,
+    # and it would have put two committed artifacts in contradiction.
+    by_enum = {b["enum"]: b for b in _rows(RESULTS / "disposition_bounds.jsonl")}
+    if not by_enum:
+        print(f"  bound: {NA} (disposition bounds not yet computed)")
+        return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned),
+                "bound_defined": False}
+
+    bounded, bounds = [], {}
+    for fn in sorted(mandated, key=lambda f: f["id"]):
+        b = by_enum.get(fn["enum"])
+        if b is None:
+            print(f"    {fn['id']:32s} {NA} (enum {fn['enum']} has no bound record)")
+            continue
+        n_eff, n_mand = b["n_negative"], len(fn["clauses"])
+        short = n_eff < n_mand
+        print(f"    {fn['id']:32s} {n_eff} implemented negative disposition(s)"
+              f" against {n_mand} mandated check(s)"
+              + ("  BOUNDED BELOW THE STANDARD" if short else ""))
+        print(f"        {fn['citation']}")
+        if b.get("n_planned_absent"):
+            print(f"        plus {b['n_planned_absent']} declared in the enum and marked "
+                  f"not implemented upstream")
+        if short:
+            # The actionable half: what a fix would have to add a member for.
+            print(f"        implemented: {b['labels']}")
+            print(f"        mandated:    {fn['clauses']}")
+            bounded.append(fn["id"])
+        bounds[fn["id"]] = {"enum": fn["enum"], "n_implemented_negative": n_eff,
+                            "n_mandated": n_mand,
+                            "n_planned_absent": b.get("n_planned_absent", 0)}
+
+    print()
+    print(count("  functions whose implemented dispositions are fewer than the "
+                "mandated checks", len(bounded)))
+    for f in bounded:
+        print(f"      {f}")
+
+    # Separately from the count: mandated checks for which the enum already
+    # names a member and upstream marks it unimplemented. This is the ML-DSA
+    # shape, where the count comparison does not bite but the gap is explicit
+    # in the generator's own source.
+    named = spec.get("planned_disposition", {})
+    d3_names = {f"{r.get('enum')}::{r.get('name')}" for r in planned}
+    stale = sorted(v for v in named.values() if v not in d3_names)
+    live = sorted(k for k, v in named.items() if v in d3_names)
+    print()
+    print(count("  mandated checks whose disposition is declared but unimplemented",
+                len(live)))
+    for clause in live:
+        print(f"      {clause}  <- {named[clause]}")
+    if stale:
+        print(f"  WARNING: {len(stale)} mapped disposition(s) no longer appear in D3 "
+              f"as planned_but_absent: {stale}")
+
+    return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned),
+            "bound_defined": True, "bounds": bounds, "n_bounded": len(bounded),
+            "n_declared_unimplemented": len(live), "n_stale_mappings": len(stale)}
 
 
 def section_reconciliation() -> dict:
@@ -280,6 +361,196 @@ def section_clauses() -> dict:
         "n_open_adjudications": len(open_adj),
         "by_doc": by_doc,
     }
+
+
+def section_columns() -> dict:
+    """The violation matrix, one column per clause per release.
+
+    This is the evidence behind every claim about a gap opening or closing
+    across a release boundary, and it was reachable only by reading the jsonl
+    by hand until now. A clause that changes status between two adjacent pins
+    is the whole of the traded-gap finding, so the change list is computed here
+    instead of being spotted by eye.
+    """
+    _rule("Violation matrix columns")
+    rows = _rows(RESULTS / "columns.jsonl")
+    if not rows:
+        print(f"  columns: {NA} (matrix not yet built)")
+        return {"defined": False}
+
+    releases = sorted({r["release"] for r in rows})
+    by_clause: dict[str, dict[str, dict]] = {}
+    for r in rows:
+        by_clause.setdefault(r["clause_id"], {})[r["release"]] = r
+
+    # Status is abbreviated in the table because three full words per release
+    # does not fit, and an unabbreviated legend costs one line.
+    SHORT = {"COVERED": "CO", "MASKED": "MA", "ABSENT": "--"}
+    head = "  {:38s} {:>6s}".format("clause", "appl.")
+    for rel in releases:
+        head += " {:>10s}".format(rel.replace("r2026-", ""))
+    print(head)
+
+    ragged = []
+    for clause in sorted(by_clause):
+        per = by_clause[clause]
+        appl = {p["n_applicable"] for p in per.values()}
+        # A clause whose applicable population moved between releases cannot be
+        # compared across them by isolated count alone, so say so rather than
+        # printing one of the two numbers.
+        appl_cell = str(next(iter(appl))) if len(appl) == 1 else "varies"
+        if len(appl) != 1:
+            ragged.append(clause)
+        line = f"  {clause:38s} {appl_cell:>6s}"
+        for rel in releases:
+            p = per.get(rel)
+            line += "        --" if p is None else " {:>7d} {:2s}".format(
+                p["n_isolated"], SHORT.get(p["status"], "??"))
+        print(line)
+    print("  legend: CO covered, MA masked, -- absent; the number is isolated "
+          "violations.")
+
+    if ragged:
+        print(f"  WARNING: applicable population differs by release for: {ragged}")
+
+    # Two kinds of movement, reported separately. A status change is a coverage
+    # gap opening or closing. A count change without a status change is a
+    # quantity moving with nobody watching it, which is worth printing but is
+    # not a finding about coverage.
+    status_changes, count_changes = [], []
+    for clause in sorted(by_clause):
+        per = by_clause[clause]
+        seq = [(rel, per[rel]) for rel in releases if rel in per]
+        for (r0, p0), (r1, p1) in zip(seq, seq[1:]):
+            if p0["status"] != p1["status"]:
+                status_changes.append(
+                    f"{clause}: {r0} {p0['status']} -> {r1} {p1['status']}")
+            elif p0["n_isolated"] != p1["n_isolated"]:
+                count_changes.append(
+                    f"{clause}: {r0} {p0['n_isolated']} -> {r1} {p1['n_isolated']} "
+                    f"(status unchanged at {p0['status']})")
+
+    print()
+    print(count("  status changes between adjacent releases", len(status_changes)))
+    for line in status_changes:
+        print(f"      {line}")
+    print(count("  isolated-count changes without a status change", len(count_changes)))
+    for line in count_changes:
+        print(f"      {line}")
+
+    per_release = {}
+    for rel in releases:
+        cols = [by_clause[c][rel] for c in by_clause if rel in by_clause[c]]
+        covered = [c for c in cols if c["status"] == "COVERED"]
+        print("  " + Rate(len(covered), len(cols),
+                          f"  {rel}: columns covered").render())
+        per_release[rel] = {"n_columns": len(cols), "n_covered": len(covered)}
+
+    return {"defined": True, "n_clauses": len(by_clause), "releases": releases,
+            "n_status_changes": len(status_changes),
+            "n_count_changes": len(count_changes),
+            "status_changes": status_changes, "count_changes": count_changes,
+            "per_release": per_release}
+
+
+def section_mechanisms() -> dict:
+    """Where a generator manipulator actually writes, against where it claims to.
+
+    A disposition names the clause it is meant to exercise. Whether the bit it
+    flips lands in the field that clause is about is a separate question, and
+    the answer decided one of this project's findings. It is computed rather
+    than read off the source: reading the source is what produced the wrong
+    answer the first time, because the bit-string abstraction that applies the
+    flip indexes from the least significant bit over a reversed byte array.
+    """
+    _rule("Mechanism landing sites")
+    rows = _rows(RESULTS / "mechanism_landings.jsonl")
+    if not rows:
+        print(f"  landings: {NA} (mechanics not yet run)")
+        return {"defined": False}
+
+    by_mech: dict[str, list[dict]] = {}
+    for r in rows:
+        by_mech.setdefault(r["mechanism_id"], []).append(r)
+
+    per_mech = {}
+    for mech in sorted(by_mech):
+        landings = sorted(by_mech[mech], key=lambda r: r.get("param_set", ""))
+        claimed = {r.get("claims_clause") for r in landings}
+        print(f"\n  {mech}  claims {'/'.join(sorted(c or '?' for c in claimed))}")
+        for r in landings:
+            msb = ""
+            if not r.get("reaches_claimed_region"):
+                msb = (f"   (an MSB reading would give {r.get('msb_would_be_region')}"
+                       f" +{r.get('msb_would_be_offset')})")
+            print(f"    {r.get('param_set', '?'):12s} bit {r.get('bit_index'):5d}"
+                  f"  byte {r.get('byte_offset'):6d}"
+                  f"  lands in {r.get('region', '?')} slot {r.get('slot_within_region')}"
+                  f"{msb}")
+        hits = [r for r in landings if r.get("reaches_claimed_region")]
+        print("    " + Rate(len(hits), len(landings), "reaches the claimed region").render())
+        per_mech[mech] = {"n_landings": len(landings), "n_reaching": len(hits)}
+
+    astray = [m for m, v in per_mech.items() if v["n_reaching"] == 0]
+    print()
+    print(count("  mechanisms that never reach the region they name", len(astray)))
+    for m in sorted(astray):
+        print(f"      {m}")
+    return {"defined": True, "n_landings": len(rows), "per_mechanism": per_mech,
+            "n_astray": len(astray)}
+
+
+def section_witness() -> dict:
+    """Witness construction, including the attempts that did not produce one.
+
+    Reporting only the successes would misdescribe the exercise. A construction
+    the target library cannot represent is evidence about that library, and a
+    construction that violates two clauses at once is evidence that the clause
+    is hard to isolate. Both are printed with their counts.
+    """
+    _rule("Witness construction")
+    validated = _rows(REPO / "witness" / "validated.jsonl")
+    if not validated:
+        print(f"  attempts: {NA} (no witness run yet)")
+        return {"defined": False}
+
+    print(count("  construction attempts", len(validated)))
+    by_state: dict[str, int] = {}
+    for r in validated:
+        by_state[r.get("state", "UNKNOWN")] = by_state.get(r.get("state", "UNKNOWN"), 0) + 1
+    for state in sorted(by_state):
+        print(Rate(by_state[state], len(validated), f"    {state}").render())
+    iso = [r for r in validated if r.get("isolates_clause")]
+    print(Rate(len(iso), len(validated), "  isolating the clause they claim").render())
+
+    print("\n  by clause and state")
+    pairs: dict[tuple, int] = {}
+    for r in validated:
+        pairs[(r.get("clause_id", "?"), r.get("state", "?"))] = \
+            pairs.get((r.get("clause_id", "?"), r.get("state", "?")), 0) + 1
+    for (clause, state), n in sorted(pairs.items()):
+        print(f"    {clause:40s} {n:4d}  {state}")
+
+    # A non-equivalence witness is the only thing that turns a surviving mutant
+    # into a statement about the corpus, so it gets its own block with the
+    # numbers a reader would want to check.
+    noneq = []
+    for wf in sorted((REPO / "witness").glob("*.jsonl")):
+        for r in _rows(wf):
+            if r.get("non_equivalent"):
+                noneq.append(r)
+    print()
+    print(count("  constructed non-equivalence witnesses", len(noneq)))
+    for r in sorted(noneq, key=lambda r: r.get("clause_id", "")):
+        print(f"      {r.get('clause_id')}  {r.get('param_set')}  {r.get('method')}")
+        if r.get("max_abs_z") is not None and r.get("bound") is not None:
+            over = r["max_abs_z"] - r["bound"]
+            print(f"        max|z| {r['max_abs_z']} against bound {r['bound']}, "
+                  f"over by {over}")
+        print(f"        pristine verdict {r.get('pristine_verdict')}, "
+              f"mutant verdict {r.get('mutant_verdict')}")
+    return {"defined": True, "n_attempts": len(validated), "by_state": by_state,
+            "n_isolating": len(iso), "n_non_equivalent": len(noneq)}
 
 
 def section_verdicts() -> dict:
@@ -504,6 +775,9 @@ SECTIONS = {
     "candidates": section_candidates,
     "reconciliation": section_reconciliation,
     "clauses": section_clauses,
+    "columns": section_columns,
+    "mechanisms": section_mechanisms,
+    "witness": section_witness,
     "verdicts": section_verdicts,
     "misattribution": section_misattribution,
     "controls": section_controls,

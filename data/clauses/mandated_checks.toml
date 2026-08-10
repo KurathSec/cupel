@@ -1,0 +1,81 @@
+# What the standard requires of each validated function, enumerated by hand.
+#
+# THIS IS A DECLARED INPUT, NOT A MEASUREMENT. The standards are PDFs. Nothing
+# in this project parses them, so the count of checks a section mandates was
+# read by a person and written down here with the citation that lets a reviewer
+# check it. It is recorded as data instead of as prose for one reason: it is
+# compared against a count that IS derived, the negative members of the
+# generator's disposition enums, and a comparison with one hand-entered side is
+# only auditable if that side is written down where the comparison can read it.
+#
+# Every entry names the clause ids it decomposes into, so control ID-1 catches a
+# clause named here that no longer exists, and so the count is the length of a
+# list instead of an integer someone typed.
+#
+# The comparison this feeds is in bin/regen.py, section `disposition`.
+
+schema = "mandated/1"
+
+[[function]]
+id        = "fips203.encapsulationKeyCheck"
+algorithm = "ML-KEM"
+citation  = "FIPS 203, section 7.2, encapsulation key check"
+# The section requires, before an encapsulation key is used: a type check on the
+# length, and a modulus check establishing that the key decodes and re-encodes
+# to itself, so its coefficients are canonical modulo q.
+clauses   = [
+  "fips203.s7.2.ek-length",
+  "fips203.s7.2.ek-modulus",
+]
+enum      = "MLKEMEncapsulationKeyDisposition"
+
+[[function]]
+id        = "fips203.decapsulationKeyCheck"
+algorithm = "ML-KEM"
+citation  = "FIPS 203, section 7.3, decapsulation key check"
+# The section requires, before decapsulation: a ciphertext type check on the
+# length, a decapsulation key type check on the length, and a hash check that
+# the value embedded in the decapsulation key matches H(ek).
+clauses   = [
+  "fips203.s7.3.ct-length",
+  "fips203.s7.3.dk-length",
+  "fips203.s7.3.dk-hash",
+]
+enum      = "MLKEMDecapsulationKeyDisposition"
+
+[[function]]
+id        = "fips204.verify"
+algorithm = "ML-DSA"
+citation  = "FIPS 204, Algorithm 8, ML-DSA.Verify_internal"
+# The algorithm rejects unless the hint decodes under Algorithm 21, the
+# infinity norm of z is below gamma_1 - beta, and the recomputed commitment
+# hash matches the value carried in the signature. hint-decode is the umbrella
+# over the three Algorithm 21 sub-clauses and is listed here in its own right,
+# since the algorithm's own rejection is on the decode failing as a whole.
+clauses   = [
+  "fips204.alg21.hint-decode",
+  "fips204.alg08.z-inf-norm",
+  "fips204.alg08.commitment-hash",
+]
+enum      = "MLDSASignatureDisposition"
+
+# Enum members that name a mandated check and are marked in upstream source as
+# not implemented. This maps the marking onto the clause it was named for, so
+# the claim "the generator names the check it does not produce" is computed from
+# the enum rather than asserted in prose. The member names are read from D3; a
+# name here that D3 does not carry is reported as a stale mapping.
+[planned_disposition]
+"fips204.alg08.z-inf-norm"      = "MLDSASignatureDisposition::LargeZNorm"
+"fips204.alg21.hint-decode"     = "MLDSASignatureDisposition::HintCheck"
+"fips204.alg08.commitment-hash" = "MLDSASignatureDisposition::CommitmentHash"
+
+# fips203.s7.3.dk-embedded-ek-modulus is deliberately absent from every list
+# above. It is a real clause and the battery models it, but section 7.3 does not
+# enumerate it among the decapsulation input checks, and counting it there would
+# inflate the mandated side of a comparison this project uses to argue that the
+# mandated side is the larger one. Where a judgement call moves a number in the
+# direction of our own conclusion, it is made against us.
+#
+# SLH-DSA has no entry. There is no specification-derived clause source for FIPS
+# 205 in this project, so there is nothing to compare its enum against and an
+# entry here would be a guess wearing the clothes of a citation.
