@@ -171,11 +171,26 @@ def _wit2():
         problems.append(f"declared but absent: {stale}")
     if bad_cmd:
         problems.append(f"claim a script with no command: {bad_cmd}")
+    # PROVENANCE.toml claimed this control checked that validated.jsonl joins
+    # back to direct.jsonl. It did not, so the file advertised a guarantee that
+    # did not exist. Rather than delete the sentence, perform the join: a
+    # recorded row naming a (clause, parameter set) that no constructed
+    # candidate covers is a row about a witness nobody built.
     n_recorded = sum(1 for f in declared.values() if f.get("origin") == "recorded")
+    constructed = {(w.get("clause_id"), w.get("param_set"))
+                   for w in jsonl.read(REPO / "witness" / "direct.jsonl")}
+    orphans = 0
+    if constructed:
+        for w in jsonl.read(REPO / "witness" / "validated.jsonl"):
+            if (w.get("clause_id"), w.get("param_set")) not in constructed:
+                orphans += 1
+    if orphans:
+        problems.append(f"{orphans} recorded row(s) join to no constructed candidate")
     if problems:
         return False, "; ".join(problems)
     return True, (f"{len(present)} witness file(s) declared, {n_recorded} of them "
-                  f"hand-recorded rather than regenerable")
+                  f"hand-recorded rather than regenerable; every recorded row "
+                  f"joins to a constructed candidate")
 
 
 @control("ID-1", "every clause id in use is a registered id")

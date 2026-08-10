@@ -578,6 +578,55 @@ def cmd_diff(args) -> int:
     return 0
 
 
+def cmd_targets_clone(args) -> int:
+    """Clone the pinned mutation substrates into vendor/.
+
+    pins.toml told a reader to run this and it did not exist, so the file
+    pointed at a command as the way to obtain the two targets and the command
+    was not there. Written because a pin that a reader cannot act on is a pin
+    that only the author can use.
+    """
+    import subprocess
+
+    pins = pinsmod.load()
+    targets = {name: spec for name, spec in pins.get("targets", {}).items()
+               if spec.get("wired_up", True)}
+    if args.target:
+        targets = {k: v for k, v in targets.items() if k == args.target}
+        if not targets:
+            print(f"cupel: no wired-up target named {args.target!r}", file=sys.stderr)
+            return 1
+
+    failed = 0
+    for name, spec in sorted(targets.items()):
+        dest = pinsmod.REPO / "vendor" / name
+        commit, repo = spec["commit"], spec["repo"]
+        if dest.exists():
+            head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=dest,
+                                  capture_output=True, text=True).stdout.strip()
+            state = "at the pin" if head == commit else f"at {head[:12]}, PIN IS {commit[:12]}"
+            print(f"  {name:16s} present, {state}")
+            if head != commit:
+                failed += 1
+            continue
+        print(f"  {name:16s} cloning {repo} @ {commit[:12]}")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        for cmd in (["git", "clone", "--quiet", f"https://github.com/{repo}.git", str(dest)],
+                    ["git", "-C", str(dest), "checkout", "--quiet", commit]):
+            r = subprocess.run(cmd, capture_output=True, text=True)
+            if r.returncode:
+                print(f"    FAILED: {' '.join(cmd)}\n    {r.stderr.strip()}", file=sys.stderr)
+                failed += 1
+                break
+        else:
+            print(f"    ok, checked out at the pinned commit")
+    if failed:
+        print(f"\ncupel: {failed} target(s) not at their pin", file=sys.stderr)
+        return 1
+    print("\nvendor/ is at the pins. `python bin/selfcheck.py` should now run MUT-1.")
+    return 0
+
+
 def cmd_divergence(args) -> int:
     """Compare the published producer source against the vectors it should produce."""
     import json
@@ -733,6 +782,12 @@ def build_parser() -> argparse.ArgumentParser:
                        help="run every mutation for a target and persist the verdicts")
     p.add_argument("--target", required=True, help="e.g. mldsa-native")
     p.set_defaults(func=cmd_measure)
+
+    p = sub.add_parser("targets", help="obtain the pinned mutation substrates")
+    tsub = p.add_subparsers(dest="cmd", required=True)
+    q = tsub.add_parser("clone", help="clone pinned targets into vendor/ at their pins")
+    q.add_argument("--target", help="one target only (default: every wired-up target)")
+    q.set_defaults(func=cmd_targets_clone)
 
     p = sub.add_parser("divergence",
                        help="compare the producer source against the vectors it should produce")

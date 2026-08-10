@@ -112,6 +112,18 @@ is the worst available failure, and line ranges fail silently under upstream dri
 pip install -e ".[dev]"
 ```
 
+The mutation arm needs the two pinned substrates, which are gitignored and
+reproduced rather than committed:
+
+```
+python -m cupel targets clone      # clones into vendor/ at the pins in data/pins.toml
+python -m cupel vectors fetch      # ~191 MiB of pinned vector data, hash-verified
+```
+
+Without the substrates, control MUT-1 skips rather than passes and `cupel
+measure` refuses; `bin/selfcheck.py` says which. Set `CUPEL_OFFLINE=1` to work
+from a warm cache and fail loudly on a miss instead of reaching the network.
+
 Python 3.11 or newer. **No runtime third-party dependencies**, by design: stdlib only, no compiled
 extension, no lockfile resolution, so the artifact installs anywhere.
 

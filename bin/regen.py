@@ -176,7 +176,7 @@ def section_disposition() -> dict:
     # occur only in a leading comment. Adding them to the member count turns 18
     # into 21 and misdescribes the source, which is a claim about someone else's
     # code and has to be exact.
-    print(count("  declared enum members across all disposition types", len(declared)))
+    print(count("  members declared across all disposition enums", len(declared)))
     print(count("  further names appearing only in an upstream TODO comment, "
                 "not declared as members", len(planned)))
     for r in sorted(planned, key=lambda r: r.get("name", "")):
@@ -638,10 +638,21 @@ def section_verdicts() -> dict:
 
     # Scan the whole directory rather than named files, so a new witness is
     # picked up by existing rather than by being remembered here.
+    # A witness for a SURVIVING mutant has to separate the mutant from the
+    # pristine build. Merely naming the clause is not enough, and neither is
+    # the library rejecting the input: a rejection says the pristine build
+    # refuses it, and says nothing about what the mutant would do. Counting
+    # those credited the hint-weight bound with a witness it does not have and
+    # put "2 of 3 survivors are witnessed" into a paper, where the whole point
+    # of the sentence is to answer the equivalent-mutant objection.
     witnessed = set()
     for wf in sorted((REPO / "witness").glob("*.jsonl")):
         for w in _rows(wf):
-            if w.get("clause_id") and w.get("isolates_clause", True):
+            if not w.get("clause_id") or not w.get("isolates_clause", True):
+                continue
+            if (w.get("non_equivalent")
+                    and w.get("pristine_verdict") and w.get("mutant_verdict")
+                    and w["pristine_verdict"] != w["mutant_verdict"]):
                 witnessed.add(w["clause_id"])
 
     by_release: dict[str, dict[str, set]] = {}
