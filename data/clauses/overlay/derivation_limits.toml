@@ -1,0 +1,102 @@
+# Why derivation D1 is provenance and not a denominator.
+#
+# The design took the clause list from provenance tags in cryptol-specs
+# docstrings, on the reasoning that a denominator derived from someone else's
+# maintained specification is harder to attack than one a person curated. An
+# independent re-derivation of the same files was run as the stability check the
+# direction document calls KT3, and it fired.
+#
+# KT3 was stated as: before quoting any fraction, check that the clause list is
+# stable under an independent re-derivation, and if two derivations of N
+# disagree materially, the fraction is not yet a number. They disagree, and the
+# disagreement is not a counting difference. It shows the method selects the
+# wrong set.
+
+[[limit]]
+id = "LIMIT-01"
+severity = "invalidating"
+title = "Tag presence does not correlate with boundary-checkability"
+evidence = """
+encapsulationKeyCheck, at ML_KEM/Specification.cry line 1422, carries no
+[FIPS-203] tag anywhere in its docstring. It is the cleanest
+boundary-checkable clause in the file: the FIPS 203 Section 7.2 modulus check,
+expressed as an encoding round trip over a public API input. It is also the
+clause this project mutated, measured, and built its ACVP-Server #460 result
+around.
+
+keyPairCheck, KeyGenProducesValidKeys, CorrectnessPKE and CorrectnessKEM are
+likewise untagged.
+"""
+consequence = """
+A denominator built from tagged docstrings omits the checks that matter most,
+so it is not a denominator. D1 supplies provenance for clauses that happen to
+carry a citation. The clause SET has to come from the definitions themselves,
+reconciled against the implementation check-site census (D2) and the generator
+disposition set (D3).
+"""
+
+[[limit]]
+id = "LIMIT-02"
+severity = "major"
+title = "Scanning only /** */ silently drops a quarter of ML-KEM's citations"
+evidence = """
+Citations by comment style, counted from the pinned files:
+
+  file                      total   /** */   /* */   //    seen
+  ML_KEM/Specification.cry     89       67      18    4   75.3%
+  ML_DSA/Specification.cry     78       75       0    3   96.2%
+  ML_DSA/ML_DSA.cry             6        6       0    0  100.0%
+  ML_DSA/Parameters.cry        16       14       2    0   87.5%
+
+Among the eighteen dropped from ML-KEM are lines 1321, 1328, 1335 and 1342,
+which carry the output-length clauses for the four public API types
+EncapsulationKey, DecapsulationKey, SharedSecretKey and Ciphertext, each cited
+as "[FIPS-203], as in the output type in Algorithm 19" or 20. Those are exactly
+the length constraints the scope rules call in-scope, and none of them is a
+docstring.
+"""
+consequence = """
+The tag scan must cover /** */, /* */ and // alike. The regexes are in place;
+extraction is not yet rewired to attach non-docstring comments to definitions,
+so the current clauses.jsonl is known-incomplete and must not be used as N.
+"""
+
+[[limit]]
+id = "LIMIT-03"
+severity = "minor"
+title = "Counting differences that are real but not invalidating"
+evidence = """
+Three further disagreements, each a genuine judgement rather than a defect:
+
+Module-header docstrings. Three ML-KEM blocks precede a module or submodule
+declaration and carry tags. Counting them gives 81 blocks and 62 tagged;
+excluding them gives 78 and 59. This project excludes them, since a module
+header is not a clause an implementation can violate.
+
+Multi-tag docstrings. Four ML-KEM blocks carry more than one citation, so
+one-tag-per-block undercounts.
+
+Attachment ambiguity. One ML-DSA docstring at lines 146 to 154 precedes two
+definitions on consecutive lines, NTT_Vec and NTTInv_Vec, and the tag covers
+both.
+"""
+consequence = "Record the choice, count it, and do not let it move silently."
+
+[[limit]]
+id = "LIMIT-04"
+severity = "minor"
+title = "Upstream semantic inconsistencies found while cross-reading"
+evidence = """
+H at ML-KEM line 192 and J at line 199 are different functions citing the same
+location, [FIPS-203] Section 4.1 Equation 4.4, while G cites 4.5 and XOF cites
+4.6. At most one of the pair is right.
+
+decapsulationInputCheck at line 1463 is tagged Section 7.3 "Decapsulation input
+check" #1-3, but its body discharges only #2 and #3; the ciphertext type check
+is claimed to be implicit in Cryptol's type system. The tag over-claims relative
+to the code, which matters when the tag is being mined for a test oracle.
+
+skCodingInverts at ML-DSA line 878 places Algorithm 25 in Section 7.3, while
+line 853 places it in Section 7.2.
+"""
+consequence = "Not defects in cupel. Worth reporting upstream, and worth not silently inheriting."

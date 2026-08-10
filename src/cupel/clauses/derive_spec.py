@@ -1,4 +1,21 @@
-"""Derivation D1: the clause list, from cryptol-specs docstrings.
+"""Derivation D1: provenance from cryptol-specs. NOT the denominator.
+
+KNOWN INVALID AS A CLAUSE SET. See data/clauses/overlay/derivation_limits.toml.
+An independent re-derivation of the same pinned files, run as the stability
+check the direction document calls KT3, found that tag presence does not
+correlate with boundary-checkability: `encapsulationKeyCheck` carries no
+[FIPS-203] tag at all, and it is the cleanest boundary-checkable clause in the
+ML-KEM file as well as the one this project mutated and measured. A denominator
+built from tagged docstrings omits the checks that matter most.
+
+So this module supplies PROVENANCE for clauses that happen to carry a citation.
+The clause set has to come from the definitions themselves, reconciled against
+the implementation check-site census and the generator disposition set.
+`bin/regen.py` refuses the headline while that reconciliation is missing.
+
+Original design note follows.
+
+Derivation D1: the clause list, from cryptol-specs docstrings.
 
 The denominator is the half of this measurement most easily attacked. A fraction
 whose denominator is one person's judgement is not a measurement, so N is
@@ -63,7 +80,14 @@ TAG_BIBLIOGRAPHY = re.compile(r"\[FIPS-(?:203|204|205)\]\s*:")
 # here that is neither strict nor bibliography must be covered by a repair.
 TAG_LOOSE = re.compile(r"\[\s*FIPS[\s-]?([0-9]{1,3})\s*\]", re.IGNORECASE)
 
+# All three comment styles carry provenance tags, not just docstrings. Scanning
+# only /** */ drops 18 of the 89 [FIPS-203] citations in the ML-KEM file into a
+# single-asterisk block and 4 more into line comments, and among the dropped are
+# all four public-API output-length clauses. A silent drop in a denominator is
+# worse than a loud one, so all three are scanned and the style is recorded.
 DOCSTRING = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
+BLOCK_COMMENT = re.compile(r"/\*(?!\*)(.*?)\*/", re.DOTALL)
+LINE_COMMENT = re.compile(r"(?://[^\n]*\n\s*)*//[^\n]*")
 
 # What the docstring attaches to. Order matters: a type signature and a binding
 # both start with an identifier, so signatures are recognised first.
