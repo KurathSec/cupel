@@ -26,6 +26,7 @@ occurrences = 1
 
 [postcondition]
 positive_vectors_must_pass = true
+is_sentinel = true
 witness_reason_labels = ["modified H"]
 prediction = """
 DIES. The matrix reports 30 isolated violations at every pinned release, so the

@@ -236,45 +236,55 @@ def section_clauses() -> dict:
 
 
 def section_verdicts() -> dict:
-    """The numerator: which clauses the vector set actually exercises."""
+    """The numerator: which clauses the vector set actually exercises.
+
+    Per release. A clause killed at one pinned release and surviving at another
+    is not 75 percent exercised; it is exercised at one and not at the other,
+    and pooling them describes neither. Substrate is the axis the any-kill rule
+    aggregates over, and release is not.
+    """
     _rule("Exercised verdicts")
-    rows = _rows(RESULTS / "verdicts.jsonl")
+    rows = [r for r in _rows(RESULTS / "verdicts.jsonl") if r.get("release")]
     if not rows:
         print(f"  clauses with a verdict: {NA} (no runs yet)")
         print(f"  exercised:              {NA}")
         return {"defined": False}
 
-    # A clause is exercised if killed in any substrate. Aggregate per clause.
-    per_clause: dict[str, set[str]] = {}
+    # Scan the whole directory rather than named files, so a new witness is
+    # picked up by existing rather than by being remembered here.
+    witnessed = set()
+    for wf in sorted((REPO / "witness").glob("*.jsonl")):
+        for w in _rows(wf):
+            if w.get("clause_id") and w.get("isolates_clause", True):
+                witnessed.add(w["clause_id"])
+
+    by_release: dict[str, dict[str, set]] = {}
     for r in rows:
-        per_clause.setdefault(r["clause_id"], set()).add(
-            r.get("exercised", {}).get("verdict", "UNKNOWN")
-        )
+        v = r.get("exercised", {}).get("verdict", "UNKNOWN")
+        by_release.setdefault(r["release"], {}).setdefault(r["clause_id"], set()).add(v)
 
-    killed, survived, inconclusive = [], [], []
-    for clause_id, verdicts in per_clause.items():
-        if "KILLED" in verdicts:
-            killed.append(clause_id)
-        elif verdicts <= {"SURVIVED"}:
-            survived.append(clause_id)
-        else:
-            inconclusive.append(clause_id)
+    per_release = {}
+    for release in sorted(by_release):
+        per = by_release[release]
+        killed = [c for c, vs in per.items() if "KILLED" in vs]
+        survived = [c for c, vs in per.items() if vs <= {"SURVIVED"}]
+        other = [c for c in per if c not in killed and c not in survived]
+        print(f"\n  {release}")
+        print("    " + Rate(len(killed), len(per), "exercised (killed in some substrate)").render())
+        for c in sorted(survived):
+            mark = "witnessed" if c in witnessed else "no witness yet"
+            print(f"      not exercised: {c}  ({mark})")
+        if other:
+            print("    " + count("inconclusive", len(other)))
+        per_release[release] = {"n_clauses": len(per), "n_killed": len(killed),
+                                "n_survived": len(survived), "n_other": len(other)}
 
-    print(count("  clauses with at least one verdict", len(per_clause)))
-    print(Rate(len(killed), len(per_clause), "  exercised (killed in some substrate)").render())
-    print(count("  not exercised (survived everywhere)", len(survived)))
-    print(count("  inconclusive", len(inconclusive)))
-
-    witnessed = [r for r in rows if r.get("exercised", {}).get("witness_id")]
-    print(count("  survivors with a constructed witness", len(witnessed)))
-    return {
-        "defined": True,
-        "n_clauses": len(per_clause),
-        "n_killed": len(killed),
-        "n_survived": len(survived),
-        "n_inconclusive": len(inconclusive),
-        "n_witnessed": len(witnessed),
-    }
+    n_surv = {c for per in by_release.values() for c, vs in per.items() if vs <= {"SURVIVED"}}
+    print()
+    print("  " + Rate(len(n_surv & witnessed), len(n_surv),
+                      "survivors carrying a constructed witness").render())
+    return {"defined": True, "per_release": per_release,
+            "n_survivors": len(n_surv), "n_witnessed": len(n_surv & witnessed)}
 
 
 def section_misattribution() -> dict:

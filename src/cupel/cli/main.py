@@ -310,6 +310,97 @@ def cmd_matrix(args) -> int:
     return 0
 
 
+def cmd_measure(args) -> int:
+    """Run every mutation for a target and persist the verdicts.
+
+    The mutation spine had been run by hand, which by this project's own rule
+    means its results were not yet numbers. This makes them regenerable: one
+    record per (clause, target, release) written to results/verdicts.jsonl, with
+    the sentinel outcome recorded alongside so a run whose sentinel survived can
+    be voided rather than believed.
+    """
+    from ..mutate import anchor as anchormod
+    from ..targets import native
+
+    target = args.target
+    tree = native.tree(target)
+    if not tree.exists():
+        print(f"cupel: {tree} not present; clone the pinned target first", file=sys.stderr)
+        return 1
+
+    entries = lockmod.load()
+    releases = _release_ids(args)
+    for rel in releases:
+        native.export_corpus(target, rel, entries)
+    lockmod.save(entries)
+
+    muts = [m for m in anchormod.load_for(target) if m.cls != "dual_producer"]
+    if not muts:
+        print(f"cupel: no mutation records for {target}")
+        return 0
+
+    # Anchors first. This needs no build and catches upstream drift immediately.
+    drift = {m.mutation_id: anchormod.check(m, tree) for m in muts}
+    bad = {k: v for k, v in drift.items() if v}
+    for k, v in bad.items():
+        print(f"  ANCHOR DRIFT {k}: {v}", file=sys.stderr)
+    muts = [m for m in muts if not drift[m.mutation_id]]
+
+    print(f"target {target}   {len(muts)} mutation(s)   releases {', '.join(releases)}\n")
+    baseline = {}
+    for rel in releases:
+        native.build(target)
+        baseline[rel] = native.run_acvp(target, rel).passed
+        print(f"  baseline {rel}: {'PASS' if baseline[rel] else 'FAIL'}")
+    if not all(baseline.values()):
+        print("cupel: a baseline failed; no mutant verdict from this run is meaningful",
+              file=sys.stderr)
+        return 4
+
+    rows, sentinels = [], []
+    print()
+    print(f"  {'clause':34s} " + " ".join(f"{r:>13s}" for r in releases))
+    for m in sorted(muts, key=lambda m: not m.is_sentinel):
+        originals = anchormod.apply(m, tree)
+        try:
+            build = native.build(target)
+            if build.returncode != 0:
+                print(f"  {m.clause_id:34s} BUILD_FAILED")
+                rows.append({"schema": "verdict/1", "clause_id": m.clause_id,
+                             "target": target, "verdict": "BUILD_FAILED",
+                             "mutation_id": m.mutation_id})
+                continue
+            verdicts = {}
+            for rel in releases:
+                verdicts[rel] = "SURVIVED" if native.run_acvp(target, rel).passed else "KILLED"
+            print(f"  {m.clause_id:34s} " + " ".join(f"{verdicts[r]:>13s}" for r in releases))
+            for rel, v in verdicts.items():
+                rows.append({
+                    "schema": "verdict/1", "clause_id": m.clause_id, "target": target,
+                    "release": rel, "mutation_id": m.mutation_id,
+                    "is_sentinel": m.is_sentinel, "prediction": m.prediction.strip(),
+                    "exercised": {"verdict": v, "kill_mode": m.kill_mode},
+                })
+            if m.is_sentinel:
+                sentinels.append(all(v == "KILLED" for v in verdicts.values()))
+        finally:
+            anchormod.restore(originals, tree)
+    native.build(target)
+
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    existing = [r for r in jsonl.read(RESULTS / "verdicts.jsonl")
+                if r.get("target") != target]
+    jsonl.write(RESULTS / "verdicts.jsonl", existing + rows)
+    print()
+    if sentinels and not all(sentinels):
+        print("  SENTINEL SURVIVED. This run is void; no verdict above may be believed.",
+              file=sys.stderr)
+        return 4
+    print("  " + Rate(sum(sentinels), len(sentinels), "sentinels killed as required").render())
+    print(f"wrote results/verdicts.jsonl ({len(existing) + len(rows)} rows)")
+    return 0
+
+
 def cmd_diff(args) -> int:
     """Diff two pinned releases at the level of individual test cases."""
     import json
@@ -403,6 +494,11 @@ def build_parser() -> argparse.ArgumentParser:
                        help="build the violation matrix and run its joins")
     p.add_argument("--dir", help="restrict to vector directories matching this substring")
     p.set_defaults(func=cmd_matrix)
+
+    p = sub.add_parser("measure", parents=[common],
+                       help="run every mutation for a target and persist the verdicts")
+    p.add_argument("--target", required=True, help="e.g. mldsa-native")
+    p.set_defaults(func=cmd_measure)
 
     p = sub.add_parser("diff", help="diff two pinned releases case by case")
     p.add_argument("--from", dest="from_release", required=True, help="pinned release id")

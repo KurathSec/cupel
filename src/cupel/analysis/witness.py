@@ -24,12 +24,26 @@ violates none is a bug in the constructor.
 
 from __future__ import annotations
 
+import pathlib
 from dataclasses import dataclass, field
 from typing import Callable
 
 from ..predicates import mldsa as mldsa_p
 from ..predicates import mlkem as mlkem_p
 from ..predicates import slhdsa as slhdsa_p
+from ..vectors.pins import REPO
+
+# Artifacts are written under the repository root, never relative to the
+# process working directory. A run that shells into a vendored tree leaves cwd
+# there, and a relative path then writes the artifact inside vendor/, which is
+# gitignored. That happened to the z-norm witness: the commit claimed an
+# artifact the repository did not contain.
+WITNESS_DIR = REPO / "witness"
+
+
+def witness_path(name: str) -> "pathlib.Path":
+    WITNESS_DIR.mkdir(parents=True, exist_ok=True)
+    return WITNESS_DIR / name
 
 BATTERIES = {
     "ML-KEM": mlkem_p.PREDICATES,
