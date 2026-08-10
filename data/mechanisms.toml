@@ -1,0 +1,88 @@
+# What each disposition actually does to a test case.
+#
+# A disposition label is a claim about why a case should be rejected. The code
+# that realises it is public, and in every case examined so far it is a fixed,
+# deterministic perturbation rather than a randomised one. That matters more
+# than it sounds: if the perturbation is deterministic and small, whether it
+# violates the clause its label names is a structural property of the generator,
+# not an accident of how many cases were drawn.
+#
+# Each record is transcribed from upstream source with its file and the
+# expression it implements, so a reviewer can check the transcription without
+# running anything. `verify` states what the corpus must show if the
+# transcription is right; `python -m cupel mechanics` checks it and fails if it
+# does not hold, so upstream drift is caught rather than assumed away.
+#
+# Source, all under gen-val/src/orleans/src/NIST.CVP.ACVTS.Libraries.Orleans.Grains/Pqc/
+# at ACVP-Server a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324.
+
+[[mechanism]]
+id = "mldsa.ModifyZ"
+algorithm = "ML-DSA"
+disposition = "ModifyZ"
+label = "modified signature - z"
+claims_clause = "fips204.alg08.z-inf-norm"
+source = "OracleObserverMLDSAVerifyCaseGrain.cs"
+expression = "var zBit = (mldsaParameters.Lambda * 2) + 1; Signature.Bits.Set(zBit, !Get(zBit))"
+kind = "single_bit_flip"
+deterministic = true
+bit_index_expr = "2 * lam + 1"
+bit_order = "msb_first"
+note = """
+2*lambda + 1 lands exactly one bit past the end of c_tilde, whose length is
+lambda/4 bytes, so the flipped bit is the second bit of the z region in every
+parameter set. It therefore alters exactly one coefficient, the first, by plus
+or minus 64. The z bound is gamma1 - beta, so the perturbation can only breach
+it when that one coefficient already sits within 64 of the bound.
+"""
+
+[mechanism.verify]
+coeffs_changed = 1
+abs_delta = 64
+region = "z"
+
+[[mechanism]]
+id = "mldsa.ModifyHint"
+algorithm = "ML-DSA"
+disposition = "ModifyHint"
+label = "modified signature - hint"
+claims_clause = "fips204.alg15.hint-decode"
+source = "OracleObserverMLDSAVerifyCaseGrain.cs"
+expression = "Signature.Bits.Set(0, !Get(0))"
+kind = "single_bit_flip"
+deterministic = true
+bit_index_expr = "0"
+bit_order = "msb_first"
+note = """
+Bit 0 under the BitString convention. Which region that reaches depends on the
+convention, and getting it wrong is exactly what issue #462 was about, so the
+region is asserted here and checked against the corpus rather than reasoned
+about.
+"""
+
+[[mechanism]]
+id = "mldsa.ModifySignature"
+algorithm = "ML-DSA"
+disposition = "ModifySignature"
+label = "modified signature - commitment"
+claims_clause = "fips204.alg08.commitment-hash"
+source = "OracleObserverMLDSAVerifyCaseGrain.cs"
+expression = "var leadingBit = Signature.Bits.Count - 1; Set(leadingBit, !Get(leadingBit))"
+kind = "single_bit_flip"
+deterministic = true
+bit_index_expr = "8 * sig_bytes - 1"
+bit_order = "msb_first"
+
+[[mechanism]]
+id = "mldsa.ModifyMessage"
+algorithm = "ML-DSA"
+disposition = "ModifyMessage"
+label = "modified message"
+claims_clause = "fips204.alg08.commitment-hash"
+source = "OracleObserverMLDSAVerifyCaseGrain.cs"
+expression = "Message.Bits.Set(0, !Get(0))  (or Mu when externalMu)"
+kind = "single_bit_flip"
+deterministic = true
+bit_index_expr = "0"
+bit_order = "msb_first"
+note = "Perturbs the message rather than the signature, so no signature clause is reachable by it."

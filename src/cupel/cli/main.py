@@ -108,6 +108,79 @@ def cmd_vectors_census(args) -> int:
     return 0
 
 
+def cmd_mechanics(args) -> int:
+    """What a disposition can detect, as opposed to what its label claims."""
+    import json
+
+    from ..analysis import mechanics as mech
+
+    entries = lockmod.load()
+    release_id = _release_ids(args)[0]
+    mechs = {m.id: m for m in mech.load()}
+    target = mechs.get("mldsa.ModifyZ")
+    if target is None:
+        print("cupel: no mldsa.ModifyZ mechanism record", file=sys.stderr)
+        return 1
+
+    # Every signature the generator could perturb, not only the labelled ones.
+    cases = []
+    for vd in pinsmod.vector_dirs():
+        if vd.algorithm != "ML-DSA" or vd.mode not in ("sigVer", "sigGen"):
+            continue
+        doc = json.loads(lockmod.ensure(release_id, pinsmod.vector_path(vd.dir, pinsmod.REASON_FILE),
+                                        entries))
+        for group in doc.get("testGroups", []):
+            ps = group.get("parameterSet")
+            for test in group.get("tests", []):
+                sig = test.get("signature")
+                if sig:
+                    cases.append((ps, bytes.fromhex(sig)))
+    lockmod.save(entries)
+
+    reaches = mech.analyse_modify_z(cases, target)
+
+    print(f"release {release_id}\n")
+    print(f"  {target.id}   label {target.label!r}")
+    print(f"  claims clause  {target.claims_clause}")
+    print(f"  source         {target.source}")
+    print(f"  expression     {target.expression}")
+    print(f"  deterministic  {target.deterministic}\n")
+
+    problems = []
+    print(f"  {'parameter set':14s} {'signatures':>11s} {'coeffs':>7s} {'delta':>7s} "
+          f"{'could breach':>13s} {'window/range':>13s} {'min headroom':>13s}")
+    for ps in sorted(reaches):
+        r = reaches[ps]
+        problems += mech.verify_transcription(r, target)
+        frac = r.window_fraction
+        print(f"  {ps:14s} {r.n_cases:>11d} {sorted(r.n_coeffs_changed)!s:>7s} "
+              f"{sorted({abs(d) for d in r.deltas})!s:>7s} {r.n_could_breach:>13d} "
+              f"{frac if frac is None else f'{frac:.2e}':>13} {r.min_headroom:>13d}")
+
+    total = sum(r.n_cases for r in reaches.values())
+    breach = sum(r.n_could_breach for r in reaches.values())
+    print("\n  " + Rate(breach, total, "signatures the perturbation could carry past the bound").render())
+
+    if problems:
+        print("\n  TRANSCRIPTION MISMATCH, the mechanism record does not describe the corpus:")
+        for p in problems:
+            print(f"    {p}")
+        return 2
+    print("  transcription verified against the corpus")
+
+    if total and breach == 0:
+        print(f"\n  {target.disposition} alters one coefficient by a bounded amount and so can")
+        print(f"  violate {target.claims_clause} only when that coefficient already lies")
+        print("  within the perturbation of the bound. It does so for no signature in this")
+        print("  corpus. This is a property of the generator, not of the sample size.")
+
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    rows = [r.as_record() | {"release": release_id} for r in reaches.values()]
+    jsonl.write(RESULTS / "mechanism_reach.jsonl", rows)
+    print(f"\nwrote results/mechanism_reach.jsonl ({len(rows)} rows)")
+    return 0
+
+
 def cmd_clauses_disposition(args) -> int:
     """Derivation D3: parse the generator's disposition enums."""
     from ..clauses import derive_disposition as d3
@@ -317,6 +390,10 @@ def build_parser() -> argparse.ArgumentParser:
     p = csub.add_parser("disposition", parents=[common],
                         help="derivation D3: parse the generator disposition enums")
     p.set_defaults(func=cmd_clauses_disposition)
+
+    p = sub.add_parser("mechanics", parents=[common],
+                       help="what a disposition can detect, not what its label claims")
+    p.set_defaults(func=cmd_mechanics)
 
     p = sub.add_parser("matrix", parents=[common],
                        help="build the violation matrix and run its joins")
