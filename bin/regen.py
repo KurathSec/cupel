@@ -553,6 +553,52 @@ def section_witness() -> dict:
             "n_isolating": len(iso), "n_non_equivalent": len(noneq)}
 
 
+def section_divergence() -> dict:
+    """Whether the published producer source produces the published vectors.
+
+    Both sides are pinned, so the comparison is mechanical. The vectors are
+    measured; the source is only hashed. A producer whose bytes are identical at
+    three consecutive pins, across a range in which the vectors it builds took
+    two different shapes, produced at most one of them.
+    """
+    _rule("Source and data divergence")
+    rows = _rows(RESULTS / "divergence.jsonl")
+    if not rows:
+        print(f"  divergence: {NA} (cupel divergence not yet run)")
+        return {"defined": False}
+
+    print(f"  {'release':12s} {'keys':>5s} {'length delta':>14s} "
+          f"{'out-of-range':>13s} {'values':>10s}")
+    for r in sorted(rows, key=lambda r: r["release"]):
+        print(f"  {r['release']:12s} {r['n_invalid_keys']:5d} "
+              f"{str(r['length_deltas']):>14s} "
+              f"{str(r['out_of_range_counts']):>13s} "
+              f"{str(r['out_of_range_values']):>10s}")
+
+    sources = _rows(RESULTS / "divergence_sources.jsonl")
+    by_path: dict[str, set] = {}
+    for s in sources:
+        by_path.setdefault(s["path"], set()).add(s["digest"])
+    unchanged = sorted(p for p, d in by_path.items() if len(d) == 1)
+    n_releases = len({s["release"] for s in sources})
+    print()
+    print(count(f"  producer sources byte-identical across {n_releases} pinned releases",
+                len(unchanged)))
+    for p in unchanged:
+        print(f"      {p.split('/')[-1]}  {sorted(by_path[p])[0]}")
+
+    shapes = {(tuple(r["length_deltas"]), tuple(r["out_of_range_counts"])) for r in rows}
+    print(count("  distinct shapes the invalid keys take across those releases",
+                len(shapes)))
+    diverges = bool(unchanged) and len(shapes) > 1
+    if diverges:
+        print("  DIVERGENCE: an unchanged producer cannot have built more than one shape.")
+    else:
+        print("  No divergence: source and data moved together, or neither moved.")
+    return {"defined": True, "n_releases": len(rows), "n_shapes": len(shapes),
+            "n_unchanged_sources": len(unchanged), "diverges": diverges}
+
+
 def section_verdicts() -> dict:
     """The numerator: which clauses the vector set actually exercises.
 
@@ -778,6 +824,7 @@ SECTIONS = {
     "columns": section_columns,
     "mechanisms": section_mechanisms,
     "witness": section_witness,
+    "divergence": section_divergence,
     "verdicts": section_verdicts,
     "misattribution": section_misattribution,
     "controls": section_controls,

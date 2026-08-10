@@ -15,7 +15,7 @@ import argparse
 import sys
 
 from ..util import jsonl
-from ..util.na import Rate
+from ..util.na import Rate, count
 from ..vectors import census as censusmod
 from ..vectors import fetch as fetchmod
 from ..vectors import lock as lockmod
@@ -578,6 +578,80 @@ def cmd_diff(args) -> int:
     return 0
 
 
+def cmd_divergence(args) -> int:
+    """Compare the published producer source against the vectors it should produce."""
+    import json
+
+    from ..analysis import divergence as dv
+
+    entries = lockmod.load()
+    releases = pinsmod.releases()
+    path = pinsmod.vector_path("ML-KEM-encapDecap-FIPS203-tr1", pinsmod.REASON_FILE)
+
+    keys, sources = [], []
+    for rel in releases:
+        projection = json.loads(
+            lockmod.ensure(rel.id, path, entries).decode("utf-8-sig"))
+        keys += dv.measure_release(rel.id, projection)
+        for src in pinsmod.manipulator_files():
+            data = lockmod.ensure(rel.id, src, entries)
+            sources.append(dv.digest_source(rel.id, rel.commit, src, data))
+    lockmod.save(entries)
+
+    if not keys:
+        print("divergence: no invalid encapsulation keys found in any pinned release",
+              file=sys.stderr)
+        return 2
+
+    print(f"  {'release':12s} {'keys':>5s} {'length delta':>14s} "
+          f"{'out-of-range':>13s} {'values':>10s}")
+    summary = dv.summarise(keys, sources)
+    for row in summary:
+        print(f"  {row['release']:12s} {row['n_invalid_keys']:5d} "
+              f"{str(row['length_deltas']):>14s} "
+              f"{str(row['out_of_range_counts']):>13s} "
+              f"{str(row['out_of_range_values']):>10s}")
+
+    print()
+    for row in summary:
+        clean = row["n_keys_with_no_violation"]
+        if clean:
+            print(f"  {row['release']}: {clean} of {row['n_invalid_keys']} invalid key(s) "
+                  f"are the standard length and carry no out-of-range coefficient.")
+
+    unchanged = dv.unchanged_sources(sources)
+    n_releases = len({s.release for s in sources})
+    print()
+    print(count(f"  producer sources byte-identical across all {n_releases} pinned releases",
+                len(unchanged)))
+    for path_, digests in unchanged.items():
+        print(f"      {path_}")
+        print(f"        {digests[0]}")
+
+    # The comparison the whole command exists for. Only report it when the data
+    # actually moved: identical source over identical data is not a divergence,
+    # it is a repository that did not change.
+    shapes = {(tuple(r["length_deltas"]), tuple(r["out_of_range_counts"]))
+              for r in summary}
+    if unchanged and len(shapes) > 1:
+        print()
+        print(f"  DIVERGENCE: the invalid keys take {len(shapes)} distinct shapes across "
+              f"these\n  releases while {len(unchanged)} producer source(s) did not change "
+              f"at all.\n  Regenerating from the published source cannot yield more than one "
+              f"of them.")
+    elif unchanged:
+        print("\n  No divergence: the source did not change and neither did the data.")
+
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    jsonl.write(RESULTS / "divergence.jsonl", summary)
+    jsonl.write(RESULTS / "divergence_keys.jsonl", [k.as_record() for k in keys])
+    jsonl.write(RESULTS / "divergence_sources.jsonl", [s.as_record() for s in sources])
+    print(f"\nwrote results/divergence.jsonl ({len(summary)} rows), "
+          f"divergence_keys.jsonl ({len(keys)}), "
+          f"divergence_sources.jsonl ({len(sources)})")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="cupel", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -629,6 +703,10 @@ def build_parser() -> argparse.ArgumentParser:
                        help="run every mutation for a target and persist the verdicts")
     p.add_argument("--target", required=True, help="e.g. mldsa-native")
     p.set_defaults(func=cmd_measure)
+
+    p = sub.add_parser("divergence",
+                       help="compare the producer source against the vectors it should produce")
+    p.set_defaults(func=cmd_divergence)
 
     p = sub.add_parser("diff", help="diff two pinned releases case by case")
     p.add_argument("--from", dest="from_release", required=True, help="pinned release id")

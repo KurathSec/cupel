@@ -89,5 +89,19 @@ def disposition_files(pins: dict | None = None) -> list[str]:
     return [f"{dt['base']}/{name}" for name in dt["files"]]
 
 
+def manipulator_files(pins: dict | None = None) -> list[str]:
+    """The producer sources, fetched per release rather than once.
+
+    A disposition enum member names a failure mode. The manipulator is what
+    builds it, so comparing the manipulator's bytes across a release boundary
+    against the vectors that changed at that boundary is what decides whether
+    the published source produced the published data.
+    """
+    mp = (pins or load())["acvp_server"].get("manipulators")
+    if not mp:
+        return []
+    return [f"{mp['base']}/{name}" for name in mp["files"]]
+
+
 def vector_path(vdir: str, filename: str) -> str:
     return f"gen-val/json-files/{vdir}/{filename}"

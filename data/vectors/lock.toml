@@ -167,6 +167,22 @@ bytes       = 30731848
 fetched_utc = "2026-08-10T03:06:36Z"
 
 [[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadDecapsulationKeyManipulator.cs"
+sha256      = "sha256:1117ea499c4d278c47ffd35ddfd6a8b89b21436ff964a792948fe21afeb1deb9"
+bytes       = 824
+fetched_utc = "2026-08-10T14:20:10Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadEncapsulationKeyManipulator.cs"
+sha256      = "sha256:c52d7ed5ba75f4e1103b35053e66fba4189f52b4e57d0d080aa14838a0848082"
+bytes       = 1568
+fetched_utc = "2026-08-10T14:20:09Z"
+
+[[entry]]
 release     = "r2026-07-28"
 commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
 path        = "gen-val/json-files/ML-DSA-keyGen-FIPS204/internalProjection.json"
@@ -293,6 +309,22 @@ path        = "gen-val/json-files/SLH-DSA-sigVer-FIPS205/internalProjection.json
 sha256      = "sha256:a013fc2104f4ed4799d96d51141f65b965969b2cf10646626a021b6d456ce792"
 bytes       = 30731848
 fetched_utc = "2026-08-10T03:07:04Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadDecapsulationKeyManipulator.cs"
+sha256      = "sha256:1117ea499c4d278c47ffd35ddfd6a8b89b21436ff964a792948fe21afeb1deb9"
+bytes       = 824
+fetched_utc = "2026-08-10T14:20:10Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadEncapsulationKeyManipulator.cs"
+sha256      = "sha256:c52d7ed5ba75f4e1103b35053e66fba4189f52b4e57d0d080aa14838a0848082"
+bytes       = 1568
+fetched_utc = "2026-08-10T14:20:10Z"
 
 [[entry]]
 release     = "r2026-07-31"
@@ -533,6 +565,22 @@ path        = "gen-val/json-files/SLH-DSA-sigVer-FIPS205/prompt.json"
 sha256      = "sha256:4e7beb1233e47baa0acdd36417c66c45811aa40a4e32ffdb1a35d93b13b289fb"
 bytes       = 30513796
 fetched_utc = "2026-08-10T09:54:09Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadDecapsulationKeyManipulator.cs"
+sha256      = "sha256:1117ea499c4d278c47ffd35ddfd6a8b89b21436ff964a792948fe21afeb1deb9"
+bytes       = 824
+fetched_utc = "2026-08-10T14:20:11Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadEncapsulationKeyManipulator.cs"
+sha256      = "sha256:c52d7ed5ba75f4e1103b35053e66fba4189f52b4e57d0d080aa14838a0848082"
+bytes       = 1568
+fetched_utc = "2026-08-10T14:20:10Z"
 
 [[entry]]
 release     = "r2026-07-31"

@@ -148,6 +148,22 @@ files = [
   "SLHDSASignatureDisposition.cs",
 ]
 
+# The producers behind those enums. A disposition names a failure mode; a
+# manipulator constructs it, and whether the two agree is a question about the
+# source rather than about any vector set.
+#
+# These are pinned per release, unlike the enums above, because the point of
+# pinning them is to compare the source across a release boundary against the
+# data that changed at that boundary. A manipulator whose bytes are identical at
+# three consecutive pins, over a range in which the vectors it produces changed
+# twice, did not produce them.
+[acvp_server.manipulators]
+base = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto"
+files = [
+  "MLKEM/BadEncapsulationKeyManipulator.cs",
+  "MLKEM/BadDecapsulationKeyManipulator.cs",
+]
+
 # ---------------------------------------------------------------------------
 # Substrates.
 # ---------------------------------------------------------------------------
