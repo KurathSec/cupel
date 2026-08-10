@@ -579,7 +579,14 @@ def cmd_measure(args) -> int:
     RESULTS.mkdir(parents=True, exist_ok=True)
     existing = [r for r in jsonl.read(RESULTS / "verdicts.jsonl")
                 if r.get("target") != target]
-    jsonl.write(RESULTS / "verdicts.jsonl", existing + rows)
+    # Sorted, because the file is committed. Appending per target made the bytes
+    # depend on which target was measured first, so re-running the same
+    # measurement produced a diff with no change in it. A committed result whose
+    # bytes move for no reason trains a reader to ignore its diffs.
+    merged = sorted(existing + rows,
+                    key=lambda r: (r.get("target", ""), r.get("clause_id", ""),
+                                   r.get("release", "")))
+    jsonl.write(RESULTS / "verdicts.jsonl", merged)
     print()
     if sentinels and not all(sentinels):
         print("  SENTINEL SURVIVED. This run is void; no verdict above may be believed.",

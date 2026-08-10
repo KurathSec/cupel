@@ -1,0 +1,49 @@
+# Citation metadata (https://citation-file-format.github.io/), read by GitHub's
+# "Cite this repository" box and by Zenodo's GitHub integration when a release
+# is archived. `version` and `date-released` are deliberately omitted: Zenodo
+# takes both from the release itself, and a hand-maintained copy here would only
+# drift.
+#
+# Add the concept DOI under `identifiers` after the first release is archived.
+# Zenodo mints it then, and it always resolves to the newest version.
+#
+# NOTE for anyone editing this file: bin/namecheck.py scans it. Keep the
+# vocabulary to what this project measures.
+cff-version: 1.2.0
+message: >-
+  If you use cupel, please cite it as below. Results are only interpretable
+  alongside the upstream state they were measured against, so please also report
+  the pinned ACVP-Server release and commit, which `bin/regen.py` prints at the
+  top of every run.
+title: "cupel: a clause-level coverage meter over the ACVP validation path for FIPS 203 and FIPS 204"
+abstract: >-
+  cupel measures which normative clauses of FIPS 203 and FIPS 204 the mandated
+  ACVP vector sets actually exercise. A non-short-circuiting predicate battery
+  scores every shipped test case against every modelled clause, producing a
+  violation matrix that distinguishes a clause no case violates from one whose
+  violations are always accompanied by another. Mutation on production
+  implementations is the oracle: a check is neutralised by an anchored,
+  content-addressed rewrite of a pinned target, the mandated set is replayed,
+  and an unchanged verdict means the suite cannot detect that check's absence.
+  Every upstream input is pinned by commit and sha256, every quotable number is
+  printed by one committed script with its denominator, and a set of controls
+  gates the headline so it refuses to print when its preconditions do not hold.
+type: software
+license: "MIT"
+repository-code: "https://github.com/KurathSec/cupel"
+authors:
+  - given-names: "Yuxiang"
+    family-names: "Ji"
+    affiliation: "Sunway College"
+    email: "kurathandrew@gmail.com"
+    orcid: "https://orcid.org/0009-0009-9835-3800"
+keywords:
+  - "ACVP"
+  - "FIPS 203"
+  - "FIPS 204"
+  - "ML-KEM"
+  - "ML-DSA"
+  - "post-quantum cryptography"
+  - "cryptographic validation"
+  - "mutation analysis"
+  - "test adequacy"
