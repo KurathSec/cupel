@@ -109,75 +109,36 @@ def cmd_vectors_census(args) -> int:
 
 
 def cmd_mechanics(args) -> int:
-    """What a disposition can detect, as opposed to what its label claims."""
-    import json
-
+    """Where each disposition's perturbation actually lands, resolved from source."""
     from ..analysis import mechanics as mech
 
-    entries = lockmod.load()
-    release_id = _release_ids(args)[0]
-    mechs = {m.id: m for m in mech.load()}
-    target = mechs.get("mldsa.ModifyZ")
-    if target is None:
-        print("cupel: no mldsa.ModifyZ mechanism record", file=sys.stderr)
-        return 1
+    mechs = [m for m in mech.load() if m.algorithm == "ML-DSA"]
+    rows = []
+    print("Resolving each BitString index against the FIPS 204 signature layout.\n")
+    print("  BitString.Bits is documented \"In LSb\" and is built by reversing the byte")
+    print("  order, so Bits[i] addresses byte (n - 1 - i div 8) from the END.\n")
+    print(f"  {'disposition':16s} {'param set':12s} {'bit':>7s} {'byte':>6s} "
+          f"{'region':8s} {'slot':>5s}  {'reaches its claimed clause?'}")
+    for m in mechs:
+        for land in mech.land_mldsa(m):
+            verdict = "yes" if land.reaches_claim else "NO"
+            slot = "" if land.lsb_slot is None else str(land.lsb_slot)
+            print(f"  {m.disposition:16s} {land.param_set:12s} {land.bit_index:>7d} "
+                  f"{land.lsb_offset:>6d} {land.lsb_region:8s} {slot:>5s}  {verdict}")
+            rows.append(land.as_record())
+        print()
 
-    # Every signature the generator could perturb, not only the labelled ones.
-    cases = []
-    for vd in pinsmod.vector_dirs():
-        if vd.algorithm != "ML-DSA" or vd.mode not in ("sigVer", "sigGen"):
-            continue
-        doc = json.loads(lockmod.ensure(release_id, pinsmod.vector_path(vd.dir, pinsmod.REASON_FILE),
-                                        entries))
-        for group in doc.get("testGroups", []):
-            ps = group.get("parameterSet")
-            for test in group.get("tests", []):
-                sig = test.get("signature")
-                if sig:
-                    cases.append((ps, bytes.fromhex(sig)))
-    lockmod.save(entries)
-
-    reaches = mech.analyse_modify_z(cases, target)
-
-    print(f"release {release_id}\n")
-    print(f"  {target.id}   label {target.label!r}")
-    print(f"  claims clause  {target.claims_clause}")
-    print(f"  source         {target.source}")
-    print(f"  expression     {target.expression}")
-    print(f"  deterministic  {target.deterministic}\n")
-
-    problems = []
-    print(f"  {'parameter set':14s} {'signatures':>11s} {'coeffs':>7s} {'delta':>7s} "
-          f"{'could breach':>13s} {'window/range':>13s} {'min headroom':>13s}")
-    for ps in sorted(reaches):
-        r = reaches[ps]
-        problems += mech.verify_transcription(r, target)
-        frac = r.window_fraction
-        print(f"  {ps:14s} {r.n_cases:>11d} {sorted(r.n_coeffs_changed)!s:>7s} "
-              f"{sorted({abs(d) for d in r.deltas})!s:>7s} {r.n_could_breach:>13d} "
-              f"{frac if frac is None else f'{frac:.2e}':>13} {r.min_headroom:>13d}")
-
-    total = sum(r.n_cases for r in reaches.values())
-    breach = sum(r.n_could_breach for r in reaches.values())
-    print("\n  " + Rate(breach, total, "signatures the perturbation could carry past the bound").render())
-
-    if problems:
-        print("\n  TRANSCRIPTION MISMATCH, the mechanism record does not describe the corpus:")
-        for p in problems:
-            print(f"    {p}")
-        return 2
-    print("  transcription verified against the corpus")
-
-    if total and breach == 0:
-        print(f"\n  {target.disposition} alters one coefficient by a bounded amount and so can")
-        print(f"  violate {target.claims_clause} only when that coefficient already lies")
-        print("  within the perturbation of the bound. It does so for no signature in this")
-        print("  corpus. This is a property of the generator, not of the sample size.")
+    missed = [r for r in rows if not r["reaches_claimed_region"]]
+    print("  " + Rate(len(missed), len(rows), "landings that miss the region their label names").render())
+    for r in missed:
+        print(f"    {r['mechanism_id']} {r['param_set']}: claims {r['claims_clause']}, "
+              f"lands in {r['region']} slot {r['slot_within_region']}")
+        print(f"      under the MSB reading this module first assumed it would have been "
+              f"{r['msb_would_be_region']}, which is how the error arose")
 
     RESULTS.mkdir(parents=True, exist_ok=True)
-    rows = [r.as_record() | {"release": release_id} for r in reaches.values()]
-    jsonl.write(RESULTS / "mechanism_reach.jsonl", rows)
-    print(f"\nwrote results/mechanism_reach.jsonl ({len(rows)} rows)")
+    jsonl.write(RESULTS / "mechanism_landings.jsonl", rows)
+    print(f"\nwrote results/mechanism_landings.jsonl ({len(rows)} rows)")
     return 0
 
 
