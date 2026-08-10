@@ -158,10 +158,17 @@ files = [
 # three consecutive pins, over a range in which the vectors it produces changed
 # twice, did not produce them.
 [acvp_server.manipulators]
-base = "gen-val/src/crypto/src/NIST.CVP.ACVTS.Libraries.Crypto"
+base = "gen-val/src"
 files = [
-  "MLKEM/BadEncapsulationKeyManipulator.cs",
-  "MLKEM/BadDecapsulationKeyManipulator.cs",
+  "crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadEncapsulationKeyManipulator.cs",
+  "crypto/src/NIST.CVP.ACVTS.Libraries.Crypto/MLKEM/BadDecapsulationKeyManipulator.cs",
+  # The ML-DSA producer. Its ModifyZ branch computes the bit index as
+  # 2*Lambda + 1, which reproduces the measured landings of 257, 385 and 513
+  # exactly, and it carries an upstream TODO saying the result has not been
+  # checked to fail the z bound. Pinned per release for the same reason as the
+  # two above: release a7f283cdc87d is described as correcting the ModifyZ
+  # sample files, so whether this file changed there is the question.
+  "orleans/src/NIST.CVP.ACVTS.Libraries.Orleans.Grains/Pqc/OracleObserverMLDSAVerifyCaseGrain.cs",
 ]
 
 # ---------------------------------------------------------------------------
