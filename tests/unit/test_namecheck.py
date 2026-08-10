@@ -61,7 +61,31 @@ class TestForbiddenShapesAreCaught:
 
 class TestCommitMessages:
     def test_commit_range_is_scanned(self):
-        """Commit messages are in scope, not just files."""
-        result = run_namecheck("--commits", "HEAD~0..HEAD")
-        assert result.returncode in (0, 1)
-        assert "namecheck" in (result.stdout + result.stderr)
+        """Commit messages are in scope, not just files.
+
+        HEAD~0..HEAD is the empty range, so the first version of this test
+        scanned zero messages and would have passed against a scanner that read
+        none. The range has to contain at least one commit for the assertion to
+        mean anything.
+        """
+        result = run_namecheck("--commits", "HEAD~1..HEAD")
+        assert result.returncode == 0, result.stderr
+        assert "commit messages in HEAD~1..HEAD clean" in result.stdout
+
+    def test_a_banned_term_in_a_commit_message_is_caught(self, tmp_path):
+        """The commit scan must be able to fail, not merely to run."""
+        repo = tmp_path / "r"
+        repo.mkdir()
+        for cmd in (["git", "init", "-q"], ["git", "config", "user.email", "t@t"],
+                    ["git", "config", "user.name", "t"]):
+            subprocess.run(cmd, cwd=repo, check=True, capture_output=True)
+        (repo / "f.txt").write_text("clean\n")
+        subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-q", "-m", "built on REDACTED-TERM-2"],
+                       cwd=repo, check=True, capture_output=True)
+        # --repo points the commit scan at the planted history. Without it the
+        # scanner reads THIS repository's log whatever cwd is set to, and the
+        # test would pass while scanning the wrong commits.
+        out = run_namecheck("--repo", str(repo), "--commits", "HEAD")
+        assert out.returncode == 1, out.stdout
+        assert "REDACTED-TERM-2" in out.stderr

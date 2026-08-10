@@ -12,7 +12,8 @@ No em-dashes, anywhere: not in prose, not in code comments, not in commit messag
 
 ```
 python bin/namecheck.py     # vocabulary firewall, no dependencies needed
-pytest                      # unit, golden and control tests
+pytest                      # unit tests only; the controls are bin/selfcheck.py
+python bin/selfcheck.py     # the 9 controls that gate the headline
 python bin/regen.py         # every quotable number, with its n
 ```
 

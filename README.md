@@ -1,6 +1,7 @@
 # cupel
 
-A coverage meter over the ACVP validation path for FIPS 203, FIPS 204 and FIPS 205.
+A coverage meter over the ACVP validation path for FIPS 203 and FIPS 204, with partial
+coverage of FIPS 205.
 
 A module that holds a FIPS 140-3 certificate for ML-KEM or ML-DSA passed ACVP. What nobody can
 say today is **what passing means**: which normative clauses of the standard the mandated vector

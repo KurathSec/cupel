@@ -4,7 +4,7 @@ This is the canonical value of the tool name, and it must never appear in a
 record schema, a clause id, a mutation id, a results file, or a guard token
 injected into vendored source. Those constraints hold and are worth keeping.
 
-It is NOT true that the name appears only here. Counted 2026-08-10: 32 tracked
+It is NOT true that the name appears only here. Counted 2026-08-10: 34 tracked
 files contain it, because the package directory is `src/cupel/` and every import
 names it. No anonymiser exists. Producing a double-blind supplementary archive
 therefore means renaming the package and rewriting imports, so treat that

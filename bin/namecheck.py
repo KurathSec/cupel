@@ -128,11 +128,17 @@ def scan_files(paths: list[Path], terms: list[Term], skip: set[str],
     return hits
 
 
-def scan_commits(rev_range: str, terms: list[Term]) -> list[Hit]:
+def scan_commits(rev_range: str, terms: list[Term], repo: Path | None = None) -> list[Hit]:
+    """Scan commit messages in a range.
+
+    `repo` exists so the guarantee is testable. Hardcoding the repository root
+    meant a test could plant a commit elsewhere and silently scan this
+    repository's history instead, which is a test that cannot fail.
+    """
     try:
         out = subprocess.run(
             ["git", "log", "--format=%H%x00%B%x01", rev_range],
-            cwd=REPO, capture_output=True, check=True, text=True,
+            cwd=repo or REPO, capture_output=True, check=True, text=True,
         ).stdout
     except subprocess.CalledProcessError as exc:
         print(f"namecheck: cannot read commits in {rev_range}: {exc}", file=sys.stderr)
@@ -152,6 +158,7 @@ def main() -> int:
     ap.add_argument("--commits", metavar="RANGE", help="also scan commit messages in this range")
     ap.add_argument("--paths", metavar="DIR", help="scan a directory tree instead of tracked files")
     ap.add_argument("--config", default=str(CONFIG))
+    ap.add_argument("--repo", help="repository whose commit messages to scan (default: this one)")
     args = ap.parse_args()
 
     terms, skip = load_terms(Path(args.config))
@@ -168,7 +175,8 @@ def main() -> int:
     scanned: list[str] = []
     hits = scan_files(files, terms, skip, scanned)
     if args.commits:
-        hits.extend(scan_commits(args.commits, terms))
+        hits.extend(scan_commits(args.commits, terms,
+                                 Path(args.repo).resolve() if args.repo else None))
 
     n_skipped = len(files) - len(scanned)
     if not hits:

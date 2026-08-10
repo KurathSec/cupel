@@ -67,13 +67,18 @@ jobs:
           python-version: "3.12"
       - name: Every quotable number, with its n
         run: python bin/regen.py
-      - name: Headline must refuse until its preconditions hold
+      # Accepting both 0 and 3 checked nothing: those are the only two codes the
+      # command returns. What matters is that an UNMET precondition refuses, so
+      # the gate is exercised directly by removing the controls and requiring 3.
+      - name: The headline gate refuses when a precondition is unmet
         run: |
           set +e
+          mv results/controls.jsonl /tmp/controls.jsonl
           python bin/regen.py --headline
           code=$?
+          mv /tmp/controls.jsonl results/controls.jsonl
           set -e
-          if [ "$code" -ne 0 ] && [ "$code" -ne 3 ]; then
-            echo "regen --headline exited $code, expected 0 (printed) or 3 (refused)"
+          if [ "$code" -ne 3 ]; then
+            echo "with controls absent, --headline exited $code, expected 3"
             exit 1
           fi

@@ -16,8 +16,9 @@ class TestDeterminism:
         assert canonical_str({"a": 1, "b": 2}) == '{"a":1,"b":2}'
 
     def test_unicode_is_not_escaped(self):
-        # ensure_ascii=False keeps the bytes stable across Python versions that
-        # differ in which codepoints they choose to escape.
+        # ensure_ascii=False is a legibility choice, not a stability fix:
+        # CPython's escaping rule under ensure_ascii=True has not varied. The
+        # test pins the choice so a future change to it is deliberate.
         assert canonical_str({"k": "é"}) == '{"k":"é"}'
 
     def test_hash_is_prefixed_with_algorithm(self):

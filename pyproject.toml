@@ -41,8 +41,10 @@ packages = ["src/cupel"]
 testpaths = ["tests"]
 addopts = "-q"
 # vendor/ holds cloned upstream trees with their own test suites. Collecting
-# them would run someone else's tests and report the result as ours.
-norecursedirs = ["vendor", ".git", "build", "dist"]
+# them would run someone else's tests and report the result as ours. This
+# REPLACES pytest's defaults rather than extending them, so the defaults worth
+# keeping are restated.
+norecursedirs = ["vendor", ".*", "build", "dist", "venv", "node_modules", "*.egg"]
 
 [tool.ruff]
 line-length = 100

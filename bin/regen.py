@@ -17,7 +17,7 @@ Two behaviours are deliberate and load bearing:
 Usage:
     bin/regen.py                 print every section
     bin/regen.py --section corpus
-    bin/regen.py --json          machine-readable, for the CI drift check
+    bin/regen.py --json          machine-readable state (no CI job consumes it yet)
     bin/regen.py --headline      print the headline sentence, or refuse
 
 Exit codes: 0 ok, 3 precondition failed, 4 a control failed.
@@ -441,11 +441,18 @@ def headline(state: dict) -> int:
     # headline. The bridge is the same declared mapping the reconciliation uses.
     from cupel.clauses import reconcile as _rec
 
-    in_scope_clauses = set()
+    # `.get(name, [])` drops a definition with no declared mapping without a
+    # word, which is the same population defect as before in the other
+    # direction: the union would be credited to all 26 while 7 produce it.
+    in_scope_clauses, unmapped = set(), []
     for c in _rows(DATA / "clauses" / "generated" / "candidates.jsonl"):
         if c.get("proposed_surface") != "api_boundary_checkable":
             continue
-        in_scope_clauses.update(_rec.SPEC_TO_CLAUSE.get(c["name"].split("::")[-1], []))
+        mapped = _rec.SPEC_TO_CLAUSE.get(c["name"].split("::")[-1])
+        if mapped is None:
+            unmapped.append(c["name"])
+            continue
+        in_scope_clauses.update(mapped)
     measured_ids = {r["clause_id"] for r in _rows(RESULTS / "verdicts.jsonl")
                     if r.get("release")}
     unmeasured = sorted(in_scope_clauses - measured_ids)
@@ -456,13 +463,18 @@ def headline(state: dict) -> int:
         f"  cryptol-specs @{pins.get('cryptol_specs', '?')[:12]} "
         f"({cand['n_in_scope']} of {cand['n_candidates']} at the module surface;\n"
         f"  {cand['n_untagged_in_scope']} carry no citation, so a tag-based derivation cannot\n"
-        f"  see them) state {len(in_scope_clauses)} distinct normative clauses.\n"
+        f"  see them), {cand['n_in_scope'] - len(unmapped)} carry a recorded clause\n"
+        f"  mapping and together state {len(in_scope_clauses)} distinct normative clauses.\n"
         f"  {len(measured_ids & in_scope_clauses)} of those have been put to a mutation and\n"
         f"  have a verdict. The remaining {len(unmeasured)} are UNMEASURED: neither\n"
         f"  exercised nor unexercised, and not foldable into either count."
     )
     for c in unmeasured:
         print(f"      unmeasured: {c}")
+    if unmapped:
+        print(f"  WARNING: {len(unmapped)} of {cand['n_in_scope']} in-scope definitions have no\n"
+              f"  recorded clause mapping, so {len(in_scope_clauses)} and the unmeasured count\n"
+              f"  below are LOWER BOUNDS: {sorted(unmapped)}")
     if orphans:
         print(f"  WARNING: {len(orphans)} measured clause(s) are not reachable from the "
               f"candidate set: {orphans}")

@@ -156,17 +156,35 @@ def _id1():
     if not path.exists():
         return None, "no canonical id list"
     known = set(tomllib.loads(path.read_text(encoding="utf-8"))["clause_ids"])
+    # Every JSONL under results/ and witness/, not a hardcoded list, and every
+    # key a clause id is stored under. The first version read four files and
+    # checked two key names, so it could not catch a rename missing
+    # reason_to_clause.toml, mechanisms.toml or mechanism_landings.jsonl, which
+    # store the id as `clause` or `claims_clause`. A control that cannot fail on
+    # the failure mode it exists for is not a control.
+    KEYS = ("clause_id", "clause", "claims_clause")
     seen: dict[str, set[str]] = {}
-    for f in list((REPO / "witness").glob("*.jsonl")) + [
-            RESULTS / "verdicts.jsonl", RESULTS / "columns.jsonl",
-            RESULTS / "reconciliation.jsonl"]:
+    for f in sorted(list((REPO / "witness").glob("*.jsonl")) + list(RESULTS.glob("*.jsonl"))):
         for row in jsonl.read(f):
-            for key in ("clause_id", "clause"):
+            for key in KEYS:
                 if row.get(key):
                     seen.setdefault(row[key], set()).add(f.name)
-    for d in sorted((DATA / "mutations").rglob("*.toml")):
-        rec = tomllib.loads(d.read_text(encoding="utf-8"))
-        seen.setdefault(rec["clause_id"], set()).add(d.name)
+    for d in sorted(DATA.rglob("*.toml")):
+        try:
+            rec = tomllib.loads(d.read_text(encoding="utf-8"))
+        except tomllib.TOMLDecodeError:
+            continue
+        stack = [rec]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, dict):
+                for key in KEYS:
+                    val = node.get(key)
+                    if isinstance(val, str) and val:
+                        seen.setdefault(val, set()).add(d.name)
+                stack.extend(node.values())
+            elif isinstance(node, list):
+                stack.extend(node)
     orphans = sorted(set(seen) - known)
     return not orphans, (
         f"{len(seen)} distinct ids in use, {len(orphans)} not registered"

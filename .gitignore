@@ -23,6 +23,3 @@ cache/
 *.local
 scratch/
 
-# Vendored upstream trees are cloned, never committed. data/pins.toml records
-# which commit, and the anchored mutations fail loudly if one drifts.
-vendor/
