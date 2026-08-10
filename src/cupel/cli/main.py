@@ -227,6 +227,123 @@ def cmd_clauses_defs(args) -> int:
     return 0
 
 
+def cmd_witness(args) -> int:
+    """Construct a witness for every clause that can have one, per parameter set.
+
+    Generalised across parameter sets deliberately. A witness that exists only
+    for ML-DSA-44 is evidence about ML-DSA-44, and a partial vector set is a
+    worse contribution upstream than none at all.
+    """
+    import json
+
+    from ..analysis import witness as wit
+
+    entries = lockmod.load()
+    release_id = _release_ids(args)[0]
+
+    # One valid source case per (directory, function, parameter set), so a
+    # keyGen case cannot shadow the sigVer case that carries a signature.
+    sources = {}
+    for vd in pinsmod.vector_dirs():
+        if vd.algorithm not in wit.BATTERIES:
+            continue
+        doc = json.loads(lockmod.ensure(
+            release_id, pinsmod.vector_path(vd.dir, pinsmod.REASON_FILE), entries))
+        for group in doc.get("testGroups", []):
+            for test in group.get("tests", []):
+                reason = test.get("reason") or ""
+                if reason and not reason.startswith("valid"):
+                    continue
+                key = (vd.algorithm, vd.dir, group.get("function", ""),
+                       group.get("parameterSet", ""))
+                sources.setdefault(key, (test, group, vd.dir, test.get("tcId")))
+    lockmod.save(entries)
+
+    ALGO = {"fips203": "ML-KEM", "fips204": "ML-DSA", "fips205": "SLH-DSA"}
+    built = []
+    for clause, (field_name, _, _) in wit.DIRECT.items():
+        algo = ALGO[clause.split(".")[0]]
+        for (a, d, fn, ps), (t, g, dd, tc) in sorted(sources.items()):
+            if a != algo or not t.get(field_name):
+                continue
+            w = wit.construct_direct(clause, t, g, a, f"{dd} tcId {tc}")
+            if w:
+                built.append(w)
+    for (a, d, fn, ps), (t, g, dd, tc) in sorted(sources.items()):
+        if a == "ML-DSA" and t.get("signature"):
+            w = wit.construct_hint_weight(t, g, f"{dd} tcId {tc}")
+            if w:
+                built.append(w)
+        if a == "ML-KEM" and t.get("dk"):
+            w = wit.construct_dk_embedded_modulus(t, g, f"{dd} tcId {tc}")
+            if w:
+                built.append(w)
+
+    by_clause = {}
+    for w in built:
+        by_clause.setdefault(w.clause_id, []).append(w)
+    print(f"  {'clause':38s} {'param sets':>10s} {'isolating':>10s}")
+    for clause, ws in sorted(by_clause.items()):
+        iso = sum(1 for w in ws if w.isolates)
+        print(f"  {clause:38s} {len({w.param_set for w in ws}):>10d} {iso:>4d}/{len(ws):<5d}")
+    print()
+    print("  " + Rate(sum(1 for w in built if w.isolates), len(built),
+                      "witnesses isolating exactly their clause").render())
+    out = wit.witness_path("direct.jsonl")
+    jsonl.write(out, [w.as_record() for w in built])
+    print(f"wrote {out.relative_to(pinsmod.REPO)} ({len(built)} rows)")
+    return 0
+
+
+def cmd_clauses_sites(args) -> int:
+    """Derivation D2: where each target actually rejects an input."""
+    from pathlib import Path
+
+    from ..clauses import derive_sites as d2
+
+    sites = []
+    for target, subdir in (("mlkem-native", "mlkem/src"), ("mldsa-native", "mldsa/src")):
+        root = pinsmod.REPO / "vendor" / target
+        found = d2.scan_target(root, target, subdir)
+        sites += found
+        print(f"  {target:16s} {len(found):>3d} rejection sites in "
+              f"{len({s.path for s in found})} file(s)")
+    if not sites:
+        print("cupel: no vendored target trees present", file=sys.stderr)
+        return 1
+    print()
+    print(f"  {'function':34s} {'target':14s} {'n':>3s}")
+    for fn, ss in sorted(d2.by_function(sites).items(), key=lambda kv: (kv[1][0].target, -len(kv[1]))):
+        print(f"  {fn:34s} {ss[0].target:14s} {len(ss):>3d}")
+    out = pinsmod.REPO / "data" / "clauses" / "generated" / "derivation_d2.jsonl"
+    jsonl.write(out, [s.as_record() for s in sites])
+    print(f"\nwrote {out.relative_to(pinsmod.REPO)} ({len(sites)} rows)")
+    return 0
+
+
+def cmd_clauses_reconcile(args) -> int:
+    """Set the three derivations against each other. KT3, mechanised."""
+    from ..clauses import reconcile as rec
+
+    gen = pinsmod.REPO / "data" / "clauses" / "generated"
+    cells = rec.build(list(jsonl.read(gen / "candidates.jsonl")),
+                      list(jsonl.read(gen / "derivation_d2.jsonl")),
+                      list(jsonl.read(gen / "derivation_d3.jsonl")))
+    if not cells:
+        print("cupel: run `clauses defs`, `clauses sites` and `clauses disposition` first",
+              file=sys.stderr)
+        return 3
+    for c in cells:
+        print(f"  {c.clause:40s} {c.code}")
+    agree = [c for c in cells if not c.needs_decision]
+    print()
+    print("  " + Rate(len(agree), len(cells), "cells where all three agree").render())
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    jsonl.write(RESULTS / "reconciliation.jsonl", [c.as_record() for c in cells])
+    print(f"wrote results/reconciliation.jsonl ({len(cells)} rows)")
+    return 0
+
+
 def cmd_matrix(args) -> int:
     """Build the violation matrix and run the zero-column, masking and
     misattribution joins."""
@@ -485,6 +602,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     clauses = sub.add_parser("clauses", help="derive and reconcile the clause list")
     csub = clauses.add_subparsers(dest="cmd", required=True)
+    p = csub.add_parser("sites", help="derivation D2: implementation rejection sites")
+    p.set_defaults(func=cmd_clauses_sites)
+    p = csub.add_parser("reconcile", help="set the three derivations against each other")
+    p.set_defaults(func=cmd_clauses_reconcile)
     p = csub.add_parser("defs", help="derivation D1b: candidates from definitions")
     p.set_defaults(func=cmd_clauses_defs)
     p = csub.add_parser("disposition", parents=[common],
@@ -499,6 +620,10 @@ def build_parser() -> argparse.ArgumentParser:
                        help="build the violation matrix and run its joins")
     p.add_argument("--dir", help="restrict to vector directories matching this substring")
     p.set_defaults(func=cmd_matrix)
+
+    p = sub.add_parser("witness", parents=[common],
+                       help="construct a witness per clause per parameter set")
+    p.set_defaults(func=cmd_witness)
 
     p = sub.add_parser("measure", parents=[common],
                        help="run every mutation for a target and persist the verdicts")
