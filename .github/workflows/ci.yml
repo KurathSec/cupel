@@ -6,6 +6,38 @@ on:
   pull_request:
 
 jobs:
+  # Manuscripts stay out of the repository. .gitignore says so, and an ignore
+  # rule is advisory: `git add -f` overrides it, and a file already tracked when
+  # the rule was written stays tracked. This job is the part that cannot be
+  # overridden by accident. It matters for two reasons. A double-anonymous
+  # submission cannot leak through a file that does not exist, and the rule that
+  # every quoted number comes from a committed artifact only holds while the
+  # manuscript is not itself an artifact.
+  no-manuscripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: paper/ holds no tracked files
+        run: |
+          n=$(git ls-files paper/ | wc -l)
+          if [ "$n" -ne 0 ]; then
+            echo "$n tracked file(s) under paper/:"
+            git ls-files paper/
+            exit 1
+          fi
+          echo "paper/ is clean"
+      - name: An sdist would not ship paper/
+        run: |
+          pip install --quiet build
+          mkdir -p paper/usenix && echo "canary" > paper/usenix/canary.tex
+          python -m build --sdist --outdir /tmp/sdist >/dev/null
+          if tar tzf /tmp/sdist/*.tar.gz | grep -q "paper/"; then
+            echo "an sdist shipped paper/"
+            tar tzf /tmp/sdist/*.tar.gz | grep "paper/"
+            exit 1
+          fi
+          echo "sdist excludes paper/"
+
   # The vocabulary firewall runs first and on every commit. It needs no
   # dependencies and no build, so there is no excuse for it to be skipped.
   namecheck:

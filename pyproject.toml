@@ -37,6 +37,13 @@ path = "src/cupel/__about__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/cupel"]
 
+# paper/ is gitignored, so hatch would normally not see it. This restates the
+# exclusion for the case where an sdist is built from a working tree rather than
+# from a clean checkout, which is exactly the case where a draft manuscript
+# would ship by accident.
+[tool.hatch.build.targets.sdist]
+exclude = ["paper/", "vendor/", "dist/", ".github/"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"

@@ -19,6 +19,15 @@ vendor/
 .cache/
 cache/
 
+# Manuscripts. This repository holds the meter and its results; papers written
+# from it live here untracked and are published through their venues instead.
+# Two consequences, both deliberate. Nothing a paper depends on may live only
+# under paper/: every number a manuscript quotes must come from a committed
+# artifact, which is what paper/usenix/check_numbers.py enforces. And a
+# double-anonymous submission cannot leak through a tracked file, because there
+# are none. CI asserts this directory stays empty of tracked files.
+paper/
+
 # Local scratch
 *.local
 scratch/
