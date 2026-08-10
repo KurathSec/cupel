@@ -10,8 +10,17 @@ The forbidden terms are held in `data/namecheck.toml` as sha256 digests rather
 than as plaintext. The first version of this file listed them openly, each with
 a reason explaining why it mattered, in a public repository. That made the
 firewall into the leak it existed to prevent: a reader learned the terms, the
-connection between them, and why they were sensitive. Digests check exactly as
-well and reveal nothing.
+connection between them, and why they were sensitive.
+
+What digests buy, stated honestly. They check exactly as well, and they remove
+the reasons and the stated connection between the terms, which was the worst of
+what leaked. They do NOT make the terms unrecoverable. The digests are unsalted
+sha256 over short natural-language strings, so anyone who guesses a candidate
+can confirm it, and an audit of this repository recovered half of them in about
+a second from an ordinary word list. A salt would not help, since it would have
+to ship here to be checkable. Treat this as raising the cost of reading the list,
+and not as hiding it: the guarantee worth relying on is that the terms cannot
+enter the repository, and that one is real.
 
 Matching is over n-grams. Each line is split on non-word characters and
 lowercased, then every 1-gram through n-gram is hashed and looked up, so a
@@ -125,14 +134,42 @@ def scan_text(text: str, where: str, cfg: Config) -> list[Hit]:
     return hits
 
 
+# Directories that are never part of the repository's own content, used when
+# walking a tree that git cannot enumerate.
+UNTRACKED_DIRS = {".git", "vendor", "paper", "dist", "build", "__pycache__",
+                  ".pytest_cache", ".ruff_cache", ".venv", "venv", ".cache",
+                  "cache", "scratch", ".eggs"}
+
+
 def tracked_files(repo: Path) -> list[Path]:
+    """Every file the repository considers its own.
+
+    Falls back to walking the tree when git cannot enumerate it. A release
+    tarball has no `.git`, so `git ls-files` exits 128 there and the scan used
+    to abort with exit 2. That made three tests fail and this command unusable
+    in exactly the artifact people download, while CI never noticed because
+    actions/checkout leaves a work tree behind. A vocabulary firewall that only
+    runs where the repository is a git checkout is not much of a firewall.
+    """
     try:
         out = subprocess.run(["git", "ls-files", "-z"], cwd=repo,
                              capture_output=True, check=True, text=True).stdout
-    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
-        print(f"namecheck: cannot list tracked files: {exc}", file=sys.stderr)
-        raise SystemExit(2)
-    return [repo / p for p in out.split("\0") if p]
+        return [repo / p for p in out.split("\0") if p]
+    except FileNotFoundError:
+        pass
+    except subprocess.CalledProcessError:
+        pass
+    if not (repo / ".git").exists():
+        out_files = []
+        for path in sorted(repo.rglob("*")):
+            if not path.is_file():
+                continue
+            if UNTRACKED_DIRS & set(path.relative_to(repo).parts):
+                continue
+            out_files.append(path)
+        return out_files
+    print("namecheck: cannot list tracked files in a git work tree", file=sys.stderr)
+    raise SystemExit(2)
 
 
 def scan_files(paths: list[Path], cfg: Config, scanned: list[str]) -> list[Hit]:

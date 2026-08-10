@@ -3,7 +3,12 @@
 # The terms are not stored here in plaintext, and neither are the reasons. A
 # public repository that lists the words it must not contain, with an
 # explanation of why each one matters, is itself the thing those words were
-# being kept out of. Digests preserve the check and remove the readable link.
+# being kept out of. Digests preserve the check and remove the reasons.
+#
+# They do not make the terms unrecoverable: unsalted sha256 over short natural
+# language is confirmable by guessing, and an audit recovered several of these
+# from a word list in about a second. The durable guarantee here is the check
+# itself, which keeps the terms out of the tree.
 #
 # GENERATED. Do not hand-edit. The plaintext source and its generator live
 # outside this repository; regenerate rather than adding an entry here.

@@ -32,6 +32,23 @@ def _release_ids(args) -> list[str]:
     return [pinsmod.latest_release().id]
 
 
+def _only_release(args, command: str) -> str:
+    """Resolve a single pin for commands that measure one.
+
+    These two commands take one release. They used to accept `--release all`
+    from the shared argument and silently keep the first pin, which made
+    witness/PROVENANCE.toml name a regenerating command that did not reproduce
+    its own file: run with `all` it rewrote 90 of 147 rows and then failed a
+    control. Refusing is better than quietly measuring something else.
+    """
+    ids = _release_ids(args)
+    if len(ids) > 1:
+        print(f"cupel {command}: takes one release, and 'all' resolves to "
+              f"{len(ids)}. Name one of: {', '.join(ids)}", file=sys.stderr)
+        raise SystemExit(2)
+    return ids[0]
+
+
 def cmd_vectors_fetch(args) -> int:
     entries = lockmod.load()
     before = len(entries)
@@ -147,7 +164,7 @@ def cmd_clauses_disposition(args) -> int:
     from ..clauses import derive_disposition as d3
 
     entries = lockmod.load()
-    release_id = _release_ids(args)[0]
+    release_id = _only_release(args, "clauses disposition")
     members = []
     for path in pinsmod.disposition_files():
         src = lockmod.ensure(release_id, path, entries).decode("utf-8-sig")
@@ -281,7 +298,7 @@ def cmd_witness(args) -> int:
     from ..analysis import witness as wit
 
     entries = lockmod.load()
-    release_id = _release_ids(args)[0]
+    release_id = _only_release(args, "witness")
 
     # One valid source case per (directory, function, parameter set), so a
     # keyGen case cannot shadow the sigVer case that carries a signature.

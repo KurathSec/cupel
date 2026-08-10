@@ -13,7 +13,7 @@ No em-dashes, anywhere: not in prose, not in code comments, not in commit messag
 ```
 python bin/namecheck.py     # vocabulary firewall, no dependencies needed
 pytest                      # unit tests only; the controls are bin/selfcheck.py
-python bin/selfcheck.py     # the 9 controls that gate the headline
+python bin/selfcheck.py     # the controls that gate the headline
 python bin/regen.py         # every quotable number, with its n
 ```
 
@@ -30,7 +30,9 @@ out of forty is a finding and an unrun experiment is not.
 **2. `data/` is input and `results/` is output.**
 
 Nothing in `src/` writes to `data/` except the clause generators, which write only to
-`data/clauses/generated/`. Hand-authored overlays and machine-derived records never share a file.
+`data/clauses/generated/`, and the vector lock, which records the digest of every fetched blob
+in `data/vectors/lock.toml`. Hand-authored overlays and machine-derived records never share a
+file.
 
 **3. Adjudicated decisions are numbered, committed and counted.**
 
@@ -60,7 +62,8 @@ python bin/selfcheck.py       # MUT-1 verifies every anchor against its pinned s
 
 `cupel.mutate.anchor` also exposes `render(mutation, tree)`, which returns the unified diff a
 reviewer would read without applying anything. There is no `cupel mutate` subcommand yet; the
-CLI groups are `vectors`, `clauses`, `mechanics`, `matrix`, `witness`, `measure` and `diff`.
+CLI groups are `vectors`, `clauses`, `targets`, `mechanics`, `matrix`, `witness`, `measure`,
+`divergence` and `diff`.
 
 ## Adding a target
 

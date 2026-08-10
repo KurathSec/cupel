@@ -51,9 +51,16 @@ jobs:
           python-version: "3.12"
       - name: Forbidden vocabulary in tracked files
         run: python bin/namecheck.py
-      - name: Forbidden vocabulary in commit messages
+      # Both event types, because a rule enforced on one path is not enforced.
+      # This job ran only on pull_request, so every direct push to main went
+      # unscanned, which is how a commit message carrying a banned term reached
+      # the public history.
+      - name: Forbidden vocabulary in commit messages (pull request)
         if: github.event_name == 'pull_request'
         run: python bin/namecheck.py --commits origin/${{ github.base_ref }}..HEAD
+      - name: Forbidden vocabulary in commit messages (push)
+        if: github.event_name == 'push'
+        run: python bin/namecheck.py --commits ${{ github.event.before }}..HEAD
 
   test:
     runs-on: ubuntu-latest

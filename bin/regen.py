@@ -255,7 +255,11 @@ def section_disposition() -> dict:
         print(f"  WARNING: {len(stale)} mapped disposition(s) no longer appear in D3 "
               f"as planned_but_absent: {stale}")
 
-    return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned),
+    # n_members counts DECLARED members. Returning len(rows) here put 21 into
+    # --json while the printed line above said 18, which is a claim about
+    # someone else's enum and has to agree with itself in both surfaces.
+    return {"defined": True, "n_members": len(declared),
+            "n_todo_names": len(planned), "n_planned_absent": len(planned),
             "bound_defined": True, "bounds": bounds, "n_bounded": len(bounded),
             "n_declared_unimplemented": len(live), "n_stale_mappings": len(stale)}
 

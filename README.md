@@ -76,7 +76,8 @@ must be made to satisfy rather than as a description of what runs.
 
 ## Discipline
 
-Two rules are enforced by CI rather than by intention.
+Two rules the project holds itself to. The first is enforced by CI on every commit. The second
+is enforced by a control that CI runs, with one gap stated below.
 
 **A number does not exist until a committed script regenerates it from committed data.**
 `bin/regen.py` is the only place a quotable number is printed. Every figure carries its `n`. An
@@ -88,7 +89,9 @@ it raises rather than return a ratio above 1.0.
 the pinned target commit, the exact anchor text and the required occurrence count. If the anchor
 does not match exactly, `check()` reports the mismatch and `apply()` refuses; it is never applied
 to a best guess. Control MUT-1 runs that check with no build at all, so drift surfaces the moment
-a pin moves. For a tool whose headline is "this mutant survived", a silently misapplied mutation
+a pin moves. The gap: MUT-1 needs the vendored targets, and CI does not clone them, so there it
+skips rather than passes and `selfcheck` still exits 0. Run `python -m cupel targets clone`
+locally to make it bite. For a tool whose headline is "this mutant survived", a silently misapplied mutation
 is the worst available failure, and line ranges fail silently under upstream drift.
 
 ## Scope, and what this does not show
@@ -117,7 +120,7 @@ reproduced rather than committed:
 
 ```
 python -m cupel targets clone      # clones into vendor/ at the pins in data/pins.toml
-python -m cupel vectors fetch      # ~191 MiB of pinned vector data, hash-verified
+python -m cupel vectors fetch      # pinned vector data, hash-verified on read
 ```
 
 Without the substrates, control MUT-1 skips rather than passes and `cupel

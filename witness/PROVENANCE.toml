@@ -17,10 +17,15 @@ schema = "provenance/1"
 [[file]]
 name       = "direct.jsonl"
 origin     = "script"
-command    = "python -m cupel witness --release all"
+command    = "python -m cupel witness"
 note       = """
-Fully regenerable. Constructs a candidate witness per clause per parameter set
-by perturbing a valid case, then scores each against the full predicate battery.
+Fully regenerable, and verified to reproduce this file byte for byte. The
+command takes one release and defaults to the newest pin; it used to accept
+`--release all` and silently keep the first, which rewrote 90 of 147 rows and
+then failed control WIT-2. It refuses that argument now.
+
+Constructs candidate witnesses across the clauses and parameter sets where a
+direct perturbation exists, then scores each against the full predicate battery.
 """
 
 [[file]]
