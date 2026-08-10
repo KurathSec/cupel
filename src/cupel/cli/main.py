@@ -532,6 +532,14 @@ def cmd_measure(args) -> int:
 
     rows, sentinels = [], []
     print()
+    # How many cases each replay actually covers, from the committed census, so
+    # the scope of a verdict travels with the verdict.
+    dirs = set(native.TARGETS[target]["dirs"])
+    replay_scope: dict[str, int] = {}
+    for c in jsonl.read(RESULTS / "census.jsonl"):
+        if c.get("dir") in dirs and c.get("release") in releases:
+            replay_scope[c["release"]] = replay_scope.get(c["release"], 0) + c["n_cases"]
+
     print(f"  {'clause':34s} " + " ".join(f"{r:>13s}" for r in releases))
     for m in sorted(muts, key=lambda m: not m.is_sentinel):
         originals = anchormod.apply(m, tree)
@@ -543,15 +551,23 @@ def cmd_measure(args) -> int:
                              "target": target, "verdict": "BUILD_FAILED",
                              "mutation_id": m.mutation_id})
                 continue
-            verdicts = {}
+            verdicts, scope = {}, {}
             for rel in releases:
-                verdicts[rel] = "SURVIVED" if native.run_acvp(target, rel).passed else "KILLED"
+                run = native.run_acvp(target, rel)
+                verdicts[rel] = "SURVIVED" if run.passed else "KILLED"
+                scope[rel] = run.returncode
             print(f"  {m.clause_id:34s} " + " ".join(f"{verdicts[r]:>13s}" for r in releases))
             for rel, v in verdicts.items():
                 rows.append({
                     "schema": "verdict/1", "clause_id": m.clause_id, "target": target,
                     "release": rel, "mutation_id": m.mutation_id,
                     "is_sentinel": m.is_sentinel, "prediction": m.prediction.strip(),
+                    # The replayed-case count makes the paper's scope claim
+                    # checkable from the artifact. Without it a reader has no
+                    # way to confirm which corpus a verdict was reached over,
+                    # and "we replayed all 1260 cases" is unverifiable prose.
+                    "n_cases_replayed": replay_scope.get(rel, 0),
+                    "harness_returncode": scope[rel],
                     "exercised": {"verdict": v, "kill_mode": m.kill_mode},
                 })
             if m.is_sentinel:
