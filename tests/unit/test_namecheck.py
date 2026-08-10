@@ -59,30 +59,41 @@ class TestForbiddenShapesAreCaught:
         assert result.returncode == 0, result.stderr
 
 
-class TestCommitMessages:
-    def test_commit_range_is_scanned(self):
-        """Commit messages are in scope, not just files.
+def _plant_repo(root, *messages):
+    """A throwaway git repository with the given commit messages.
 
-        HEAD~0..HEAD is the empty range, so the first version of this test
-        scanned zero messages and would have passed against a scanner that read
-        none. The range has to contain at least one commit for the assertion to
-        mean anything.
+    The commit tests plant their own history rather than reading this
+    repository's. Depending on the ambient repo made the suite environment
+    coupled: actions/checkout clones with depth 1, so HEAD~1 does not resolve in
+    CI and a test that passed locally failed on every Python version.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    for cmd in (["git", "init", "-q"], ["git", "config", "user.email", "t@t"],
+                ["git", "config", "user.name", "t"]):
+        subprocess.run(cmd, cwd=root, check=True, capture_output=True)
+    for i, message in enumerate(messages):
+        (root / f"f{i}.txt").write_text(f"content {i}\n")
+        subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-q", "-m", message],
+                       cwd=root, check=True, capture_output=True)
+    return root
+
+
+class TestCommitMessages:
+    def test_a_clean_range_of_more_than_one_commit_passes(self, tmp_path):
+        """The range must contain commits for the result to mean anything.
+
+        The first version used HEAD~0..HEAD, the empty range, so it scanned zero
+        messages and would have passed against a scanner that read none.
         """
-        result = run_namecheck("--commits", "HEAD~1..HEAD")
+        repo = _plant_repo(tmp_path / "clean", "first commit", "second commit")
+        result = run_namecheck("--repo", str(repo), "--commits", "HEAD~1..HEAD")
         assert result.returncode == 0, result.stderr
         assert "commit messages in HEAD~1..HEAD clean" in result.stdout
 
     def test_a_banned_term_in_a_commit_message_is_caught(self, tmp_path):
         """The commit scan must be able to fail, not merely to run."""
-        repo = tmp_path / "r"
-        repo.mkdir()
-        for cmd in (["git", "init", "-q"], ["git", "config", "user.email", "t@t"],
-                    ["git", "config", "user.name", "t"]):
-            subprocess.run(cmd, cwd=repo, check=True, capture_output=True)
-        (repo / "f.txt").write_text("clean\n")
-        subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "commit", "-q", "-m", "built on REDACTED-TERM-2"],
-                       cwd=repo, check=True, capture_output=True)
+        repo = _plant_repo(tmp_path / "dirty", "built on REDACTED-TERM-2")
         # --repo points the commit scan at the planted history. Without it the
         # scanner reads THIS repository's log whatever cwd is set to, and the
         # test would pass while scanning the wrong commits.
