@@ -1,0 +1,32 @@
+schema = "mutation/1"
+mutation_id = "mldsa-native:fips204.alg08.commitment-hash:neutralize"
+clause_id = "fips204.alg08.commitment-hash"
+target = "mldsa-native"
+target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+state = "located"
+class = "neutralize_predicate"
+intent = "Make the challenge comparison always succeed."
+kill_mode = "reject_flip"
+
+# This is the sentinel. Every negative sigVer vector in the corpus is rejected
+# somewhere, and for most of them the commitment hash is the only thing that can
+# reject them, so neutralising it must kill the mutant loudly. If this one
+# survives, the harness is not running the vectors and no other verdict from the
+# same run may be believed.
+[[edit]]
+path = "mldsa/src/sign.c"
+anchor = """
+  cmp = mld_ct_memcmp(c, c2, MLDSA_CTILDEBYTES);
+"""
+replacement = """
+  cmp = 0; (void)c2;
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+is_sentinel = true
+prediction = """
+DIES. Registered before the run. A surviving sentinel voids the whole run rather
+than counting as a finding.
+"""

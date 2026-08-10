@@ -1,0 +1,32 @@
+schema = "mutation/1"
+mutation_id = "mldsa-native:fips204.alg08.z-inf-norm:neutralize"
+clause_id = "fips204.alg08.z-inf-norm"
+target = "mldsa-native"
+target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+state = "located"
+class = "neutralize_predicate"
+intent = "Make the z infinity-norm bound never reject."
+kill_mode = "reject_flip"
+located_by = "recon; corroborated by proofs/cbmc having a harness for the norm check"
+
+# `0 &&` rather than deleting the block: the surrounding variables stay used, which
+# matters under this repository's strict C90 warning flags, and the diff a reviewer
+# reads is one token wide.
+[[edit]]
+path = "mldsa/src/sign.c"
+anchor = """
+  if (mld_polyvecl_chknorm(z, MLDSA_GAMMA1 - MLDSA_BETA))
+"""
+replacement = """
+  if (0 && mld_polyvecl_chknorm(z, MLDSA_GAMMA1 - MLDSA_BETA))
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+witness_reason_labels = ["modified signature - z"]
+prediction = """
+SURVIVES. The violation matrix reports zero of 1260 signature-bearing cases
+violating this bound, so no vector should change verdict. Registered before the
+run.
+"""
