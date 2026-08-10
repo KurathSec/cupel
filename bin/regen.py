@@ -392,13 +392,22 @@ def section_controls() -> dict:
     if not rows:
         print(f"  controls run: {NA} (selftest not yet run)")
         return {"defined": False, "all_green": False, "n_failed": 0}
-    failed = [r for r in rows if not r.get("passed")]
+    # A skipped control is not a failed one. selfcheck already draws that line
+    # and writes skipped=true; reading only `passed` collapsed the two, so a
+    # checkout without vendored trees, where MUT-1 correctly skips, made regen
+    # exit 4 as though a control had gone red.
+    skipped = [r for r in rows if r.get("skipped")]
+    failed = [r for r in rows if not r.get("passed") and not r.get("skipped")]
     for r in sorted(rows, key=lambda r: r.get("control_id", "")):
-        status = "pass" if r.get("passed") else "FAIL"
+        status = "skip" if r.get("skipped") else ("pass" if r.get("passed") else "FAIL")
         print(f"  {r.get('control_id', '?'):10s} {status:5s} {r.get('note', '')}")
     print()
-    print(Rate(len(rows) - len(failed), len(rows), "  controls passing").render())
-    return {"defined": True, "all_green": not failed, "n_failed": len(failed), "n_total": len(rows)}
+    print(Rate(len(rows) - len(failed) - len(skipped), len(rows) - len(skipped),
+               "  controls passing").render())
+    if skipped:
+        print(count("  skipped, their input is not present", len(skipped)))
+    return {"defined": True, "all_green": not failed, "n_failed": len(failed),
+            "n_skipped": len(skipped), "n_total": len(rows)}
 
 
 # ----------------------------------------------------------------------------
