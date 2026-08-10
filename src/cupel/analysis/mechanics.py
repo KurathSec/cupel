@@ -185,10 +185,10 @@ class Landing:
 # touches the region cannot make its clause fire.
 CLAUSE_REGION = {
     "fips204.alg08.z-inf-norm": "z",
-    "fips204.alg15.hint-decode": "hint",
-    "fips204.alg15.hint-weight": "hint",
-    "fips204.alg15.hint-ordering": "hint",
-    "fips204.alg15.hint-trailing-zeros": "hint",
+    "fips204.alg21.hint-decode": "hint",
+    "fips204.alg21.hint-weight": "hint",
+    "fips204.alg21.hint-ordering": "hint",
+    "fips204.alg21.hint-trailing-zeros": "hint",
     # The commitment hash is computed over the whole signature, so any region
     # reaches it. That is why it absorbs every perturbation that fails to hit
     # the clause its label names.

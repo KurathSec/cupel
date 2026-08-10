@@ -215,19 +215,19 @@ PREDICATES = [
         fn=_z_inf_norm,
     ),
     Predicate(
-        clause_id="fips204.alg15.hint-weight",
+        clause_id="fips204.alg21.hint-weight",
         algorithm="ML-DSA", doc="FIPS-204", anchor="Section 7.4, Algorithm 21",
         title="hint tally is monotone and at most omega",
         fn=_hint_weight,
     ),
     Predicate(
-        clause_id="fips204.alg15.hint-ordering",
+        clause_id="fips204.alg21.hint-ordering",
         algorithm="ML-DSA", doc="FIPS-204", anchor="Section 7.4, Algorithm 21",
         title="hint indices strictly increase within each polynomial",
         fn=_hint_ordering,
     ),
     Predicate(
-        clause_id="fips204.alg15.hint-trailing-zeros",
+        clause_id="fips204.alg21.hint-trailing-zeros",
         algorithm="ML-DSA", doc="FIPS-204", anchor="Section 7.4, Algorithm 21",
         title="hint slots beyond the declared count are zero",
         fn=_hint_trailing_zeros,

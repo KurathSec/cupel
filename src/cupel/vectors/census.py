@@ -9,7 +9,8 @@ it does not interpret. Two counts are kept separate on purpose.
 They are not the same. ML-KEM `decapsulation` cases carry a `reason` of
 "modified ciphertext" but no `testPassed` at all, because the expected answer is
 the implicit-rejection shared secret rather than a rejection. Collapsing the two
-would either hide 30 negative cases or invent 30 expectations.
+would either hide 45 negative cases or invent 45 expectations: 15 in
+ML-KEM-encapDecap-FIPS203 and 30 in the tr1 set.
 """
 
 from __future__ import annotations

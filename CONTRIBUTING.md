@@ -49,20 +49,29 @@ numbers. Do not use `patch` files, which fuzz-apply by default.
 Prefer `0 && cond` over deleting a block, so surrounding variables stay used under the strict
 warning flags the target repositories compile with.
 
-Then:
+Anchors are checked with no build required, by control MUT-1:
 
 ```
-python -m cupel mutate verify-anchors    # must be green, no build required
-python -m cupel mutate render <id>       # prints the diff a reviewer will read
+python bin/selfcheck.py       # MUT-1 verifies every anchor against its pinned source
 ```
+
+`cupel.mutate.anchor` also exposes `render(mutation, tree)`, which returns the unified diff a
+reviewer would read without applying anything. There is no `cupel mutate` subcommand yet; the
+CLI groups are `vectors`, `clauses`, `mechanics`, `matrix`, `witness`, `measure` and `diff`.
 
 ## Adding a target
 
-Implement the `Target` protocol in `src/cupel/targets/base.py`. Note that it has no `grade()`
-method, deliberately: grading is central, in `src/cupel/runner/grade.py`, against
-`expectedResults.json`. If each adapter graded, the `exercised` boolean would inherit a different
-notion of failure per adapter and the headline would stop being one measurement. Adapters produce
-ACVP response JSON and nothing else.
+Targets are adapters in `src/cupel/targets/`. Today there is exactly one, `native.py`, covering
+both pq-code-package repositories, and there is no `Target` protocol or base class yet: a second
+adapter shaped differently is what should motivate extracting one, rather than guessing the seam
+in advance.
+
+The rule that will matter when that happens: **an adapter must not grade.** Grading belongs in one
+place, against `expectedResults.json`, because if each adapter graded then the `exercised` boolean
+would inherit a different notion of failure per adapter and the headline would stop being one
+measurement. `native.py` currently delegates grading to the upstream harness and reads its exit
+status, and `runner/percase.py` does the per-case comparison where a kill has to be told apart
+from a degeneracy.
 
 Declare `lineage` per algorithm honestly. OpenSSL's ML-KEM is a port of BoringSSL's, so those two
 are one lineage and the tool must refuse to count them as two independent witnesses.

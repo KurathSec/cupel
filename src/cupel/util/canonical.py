@@ -1,9 +1,11 @@
 """Canonical serialisation. The only bytes that are ever hashed.
 
-Every record id, cache key and content hash in this project is a sha256 over
-`canonical_bytes(...)`. Keeping one definition means a run computed on two
-machines gets the same id, which is what makes `--refresh` a free
-reproducibility check rather than a guess.
+Every record id computed from structured data is a sha256 over
+`canonical_bytes(...)`, so a run computed on two machines gets the same id.
+
+Raw blobs are different and are hashed by `sha256_bytes` over their actual
+bytes, because a fetched file has to hash to what upstream serves. Canonicalising
+it first would compare cupel's re-encoding rather than the artifact.
 """
 
 from __future__ import annotations

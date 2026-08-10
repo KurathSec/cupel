@@ -5,16 +5,19 @@ rejected. That assertion is testable: evaluate the clause the label names
 against the case, independently of every other clause, and see whether it is
 actually violated.
 
-Three outcomes, and the distinction between the last two matters:
+Four outcomes, and the distinction between the last two matters:
 
   attributed     the case violates the clause its label names
   misattributed  it does not. The case cannot fail for the stated reason, and
                  whatever does reject it is some other check
-  unmapped       the label is not in the mapping, so nothing is claimed
+  unmapped-label the (algorithm, reason) pair is absent from the mapping
+  no-predicate   the label maps to a clause this battery cannot evaluate, so
+                 nothing is claimed either way
 
-Reporting misattribution requires the label mapping to be right, so a label
-that maps to a clause with no predicate is reported as unmapped rather than
-being scored either way.
+Reporting misattribution requires the label mapping to be right, so the last two
+are kept apart: a label absent from the mapping is a gap in the mapping, while a
+label naming a clause the battery cannot evaluate is a gap in the battery. Only
+the first two are scored.
 """
 
 from __future__ import annotations

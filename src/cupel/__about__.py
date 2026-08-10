@@ -1,9 +1,14 @@
 """Single naming point for the project.
 
-The tool name appears here and nowhere else. It must never appear in a record
-schema, a clause id, a mutation id, a results file, or a guard token injected
-into vendored source. `bin/anonymize.py` rewrites this module and asserts the
-name does not survive anywhere in the supplementary archive.
+This is the canonical value of the tool name, and it must never appear in a
+record schema, a clause id, a mutation id, a results file, or a guard token
+injected into vendored source. Those constraints hold and are worth keeping.
+
+It is NOT true that the name appears only here. Counted 2026-08-10: 32 tracked
+files contain it, because the package directory is `src/cupel/` and every import
+names it. No anonymiser exists. Producing a double-blind supplementary archive
+therefore means renaming the package and rewriting imports, so treat that
+readiness as a requirement rather than a property the repository already has.
 """
 
 TOOL_NAME = "cupel"

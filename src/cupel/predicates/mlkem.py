@@ -23,6 +23,22 @@ PARAMS = {
 }
 
 
+# Which vector-set function actually receives which input. ACVP emits ek, dk and
+# c on EVERY ML-KEM test object regardless of function, so a guard that asks
+# "is the field present" never fires and every clause reports the whole
+# algorithm as applicable. That is exactly the inflation base.py says the
+# not-applicable return exists to prevent, and the premise of its example was
+# false for the pinned files: a decapsulation case does carry an `ek` in the
+# JSON, it just never passes one to the function under test.
+EK_FUNCTIONS = ("encapsulation", "encapsulationKeyCheck")
+DK_FUNCTIONS = ("decapsulation", "decapsulationKeyCheck")
+CT_FUNCTIONS = ("decapsulation",)
+
+
+def _applies(group: dict, functions: tuple[str, ...]) -> bool:
+    return group.get("function") in functions
+
+
 def k_of(group: dict) -> int:
     ps = group.get("parameterSet")
     if ps not in PARAMS:
@@ -48,6 +64,8 @@ def ct_len(k: int) -> int:
 # ---------------------------------------------------------------------------
 
 def _ek_length(case, group):
+    if not _applies(group, EK_FUNCTIONS):
+        return None
     ek = hexbytes(case.get("ek"))
     if ek is None:
         return None
@@ -68,6 +86,8 @@ def _ek_modulus(case, group):
     would ALSO have failed the modulus check is exactly the question #460 turned
     on, and short-circuiting on length is what hid the answer for a year.
     """
+    if not _applies(group, EK_FUNCTIONS):
+        return None
     ek = hexbytes(case.get("ek"))
     if ek is None:
         return None
@@ -83,6 +103,8 @@ def _ek_modulus(case, group):
 # ---------------------------------------------------------------------------
 
 def _dk_length(case, group):
+    if not _applies(group, DK_FUNCTIONS):
+        return None
     dk = hexbytes(case.get("dk"))
     if dk is None:
         return None
@@ -96,6 +118,8 @@ def _dk_hash(case, group):
     dk[768k+32 : 768k+64] and the encapsulation key it must digest is
     dk[384k : 768k+32].
     """
+    if not _applies(group, DK_FUNCTIONS):
+        return None
     dk = hexbytes(case.get("dk"))
     if dk is None:
         return None
@@ -112,6 +136,8 @@ def _dk_embedded_ek_modulus(case, group):
     check. FIPS 203 requires the pair to be consistent, and a dk carrying an
     out-of-range embedded ek is not a valid decapsulation key.
     """
+    if not _applies(group, DK_FUNCTIONS):
+        return None
     dk = hexbytes(case.get("dk"))
     if dk is None:
         return None
@@ -122,6 +148,8 @@ def _dk_embedded_ek_modulus(case, group):
 
 
 def _ct_length(case, group):
+    if not _applies(group, CT_FUNCTIONS):
+        return None
     c = hexbytes(case.get("c"))
     if c is None:
         return None

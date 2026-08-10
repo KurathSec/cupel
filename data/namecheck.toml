@@ -7,8 +7,10 @@
 # is near zero, but reusing its vocabulary would manufacture the path that its
 # rule forbids. This file makes the guarantee mechanical instead of remembered.
 #
-# `bin/namecheck.py` skips this file and itself. Everything else tracked by git
-# is scanned, plus commit messages when a range is given.
+# `bin/namecheck.py` skips the three paths listed under [skip] below, which are
+# the files that must name the banned terms in order to ban or test them.
+# Everything else tracked by git is scanned, plus commit messages when a range
+# is given.
 
 [[banned]]
 term = "REDACTED-TERM-2"

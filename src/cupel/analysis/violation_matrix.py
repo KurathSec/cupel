@@ -27,7 +27,7 @@ An ABSENT column is decisive: no case violates the clause, so nothing that
 deletes the check can be caught, and the mutant survives necessarily.
 
 A COVERED column is NOT decisive in the other direction, and assuming it was
-produced a wrong prediction here. `fips204.alg15.hint-trailing-zeros` shows 20
+produced a wrong prediction here. `fips204.alg21.hint-trailing-zeros` shows 20
 isolated violations at r2026-07-31, so deleting the check was predicted to be
 caught. The mutant survived.
 

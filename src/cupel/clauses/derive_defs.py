@@ -37,6 +37,13 @@ PROPERTY = re.compile(r"^property\s+([A-Za-z_][\w']*)")
 # a named type. Matching it yields eight candidates all called "constraint".
 TYPEDEF = re.compile(r"^type\s+(?!constraint\b)([A-Za-z_][\w']*)")
 
+# Declining `type constraint` in TYPEDEF is not enough: BINDING's `[^=\n]*=`
+# stops at the `=` inside a `<=` or `==` in the constraint body and names the
+# clause `type`. Six phantom definitions reached the candidate set that way and
+# inflated the published denominator. The phrase has to be refused before the
+# branch chain, not inside one branch of it.
+KEYWORD_PHRASE = re.compile(r"^type\s+constraint\b")
+
 # Only these type aliases fix an encoding length observable at the boundary.
 # Proposing every alias in scope swept in parameters like `ell` and `tau`.
 ENCODING_TYPE = re.compile(
@@ -208,6 +215,9 @@ def extract(source: str, path: str) -> list[Definition]:
         raw = stripped
         if raw.lstrip().startswith(("//", "/*", "*", "module", "submodule",
                                     "import", "private", "parameter", "}")):
+            continue
+
+        if KEYWORD_PHRASE.match(raw):
             continue
 
         name = kind = None

@@ -33,6 +33,12 @@ ERROR_RETURN = re.compile(r"\b(ML[KD]_ERR_[A-Z_]+)")
 # Contract annotations restate the error codes a function may return. They are
 # documentation of the site, not the site.
 CONTRACT = re.compile(r"^\s*(?:ensures|requires|assigns|invariant|__CPROVER)")
+
+# A doc comment naming an error code documents a site; it is not one. Eight of
+# thirty-one rows were prose from /* ... */ blocks describing what a function
+# returns, which made the implementation census count documentation as evidence
+# that a check exists.
+COMMENT_LINE = re.compile(r"^\s*(?:\*|/\*|//)")
 FUNC_HEAD = re.compile(r"^[A-Za-z_][\w \t\*]*\b([a-z_][\w]*)\s*\([^;]*$")
 
 # Sites that are not input rejection. A failed self-test or allocation is a
@@ -77,7 +83,7 @@ def scan_file(text: str, path: str, target: str) -> list[Site]:
     for n, raw in enumerate(lines, 1):
         if not raw[:1].isspace() and (m := FUNC_HEAD.match(raw)):
             current = m.group(1)
-        if CONTRACT.match(raw):
+        if CONTRACT.match(raw) or COMMENT_LINE.match(raw):
             continue
         for m in ERROR_RETURN.finditer(raw):
             code = m.group(1)

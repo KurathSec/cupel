@@ -216,12 +216,19 @@ def section_candidates() -> dict:
 
 
 def section_clauses() -> dict:
-    """The denominator, and whether it is yet allowed to be one."""
-    _rule("Clause denominator")
+    """D1 provenance coverage. NOT the denominator, and titled so it cannot be
+    mistaken for one.
+
+    This section reads the superseded tag-based extraction. That derivation was
+    retracted as a clause set, because tag presence does not correlate with
+    boundary-checkability, so what it reports is how much of the specification
+    carries a citation and nothing more. The denominator lives in the candidate
+    section above.
+    """
+    _rule("Provenance coverage (D1, superseded as a clause set)")
     rows = _rows(DATA / "clauses" / "generated" / "clauses.jsonl")
     if not rows:
-        print(f"  extracted clauses:   {NA} (extractor not yet run)")
-        print(f"  in scope:            {NA}")
+        print(f"  tagged docstrings:   {NA} (extractor not yet run)")
         return {"defined": False, "reconciled": False}
 
     in_scope = [r for r in rows if r.get("surface") == "api_boundary_checkable"]
@@ -230,8 +237,10 @@ def section_clauses() -> dict:
     for r in in_scope:
         by_doc[r.get("doc", "?")] = by_doc.get(r.get("doc", "?"), 0) + 1
 
-    print(count("  extracted clause records", len(rows)))
-    print(Rate(len(in_scope), len(rows), "  in scope (API-boundary-checkable)").render())
+    print("  This is D1, the tag-based extraction, retained as PROVENANCE only.")
+    print("  It was retracted as a clause set: tag presence does not correlate")
+    print("  with boundary-checkability. The denominator is the candidate section.")
+    print(count("  docstrings carrying a FIPS citation", len(rows)))
     for doc in sorted(by_doc):
         print(count(f"    {doc}", by_doc[doc]))
     print(f"    FIPS-205: {NA} (no specification-derived clause source; see plan)")

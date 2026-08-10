@@ -1,9 +1,10 @@
 """Anchored source rewrites.
 
 A mutation is specified as exact text to find and exact text to put in its place,
-with the number of times the anchor must occur. If the count does not match, the
-mutation is NOT_APPLICABLE and is recorded as such. It is never applied to a
-best guess.
+with the number of times the anchor must occur. If the count does not match,
+`check()` reports the mismatch and `apply()` refuses with AnchorMismatch. It is
+never applied to a best guess. The refusal is surfaced by the caller, which is
+where it becomes a record; nothing here writes one.
 
 Line numbers were the obvious alternative and are the wrong one. They drift
 silently when upstream edits anything above them, and a mutation applied three

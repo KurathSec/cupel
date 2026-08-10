@@ -1,6 +1,6 @@
 schema = "mutation/1"
-mutation_id = "mldsa-native:fips204.alg15.hint-trailing-zeros:neutralize"
-clause_id = "fips204.alg15.hint-trailing-zeros"
+mutation_id = "mldsa-native:fips204.alg21.hint-trailing-zeros:neutralize"
+clause_id = "fips204.alg21.hint-trailing-zeros"
 target = "mldsa-native"
 target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
 state = "located"

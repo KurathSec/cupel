@@ -146,7 +146,7 @@ def construct_hint_weight(case: dict, group: dict, source: str) -> Witness | Non
     raw[-1] = p.omega + 1
     built = dict(case)
     built["signature"] = raw.hex()
-    w = Witness(clause_id="fips204.alg15.hint-weight", algorithm="ML-DSA",
+    w = Witness(clause_id="fips204.alg21.hint-weight", algorithm="ML-DSA",
                 param_set=group.get("parameterSet", ""), field_name="signature",
                 method="set the hint tally above omega", derived_from=source,
                 case=built, group=group)

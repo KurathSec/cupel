@@ -77,11 +77,11 @@ cases violate the commitment-hash clause instead.
 [[label]]
 reason = "modified signature - hint"
 algorithm = "ML-DSA"
-clause = "fips204.alg15.hint-decode"
+clause = "fips204.alg21.hint-decode"
 also_permitted = [
-  "fips204.alg15.hint-weight",
-  "fips204.alg15.hint-ordering",
-  "fips204.alg15.hint-trailing-zeros",
+  "fips204.alg21.hint-weight",
+  "fips204.alg21.hint-ordering",
+  "fips204.alg21.hint-trailing-zeros",
 ]
 note = "HintBitUnpack decomposes into three separable sub-clauses; violating any one realises the label."
 

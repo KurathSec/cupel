@@ -46,9 +46,16 @@ input class is absent or merely masked. Everything falls out of `V`:
 the check from mlkem-native, mldsa-native or OpenSSL decides. Disagreement means the battery
 misencodes the specification, and that surfaces mechanically rather than in review.
 
-A clause counts as exercised if it is killed in **any** substrate. It counts as unexercised only
-if it survives across substrates spanning at least two distinct code lineages. Anything else is
-inconclusive and is reported in its own bucket with its own `n`.
+A clause counts as exercised if it is killed in **any** substrate, which maximises the numerator
+and so minimises the claimed gap.
+
+The intended converse rule is that a clause counts as unexercised only if it survives across
+substrates spanning at least two distinct code lineages, since OpenSSL's ML-KEM is a port of
+BoringSSL's and counting those as independent would be wrong. **That rule is not implemented.**
+Only one substrate family is wired up today, pq-code-package's mlkem-native and mldsa-native, so
+every survival currently rests on a single lineage and `bin/regen.py` applies no lineage test. Read
+the survivals accordingly, and treat this paragraph as a specification of what a second lineage
+must be made to satisfy rather than as a description of what runs.
 
 ## Discipline
 

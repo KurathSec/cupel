@@ -39,9 +39,9 @@ SPEC_TO_CLAUSE = {
     "Verify": ["fips204.alg08.commitment-hash", "fips204.alg08.z-inf-norm",
                "fips204.alg08.sig-length"],
     "Verify_internal": ["fips204.alg08.verify-decision"],
-    "HintBitUnpack": ["fips204.alg15.hint-decode", "fips204.alg15.hint-weight",
-                      "fips204.alg15.hint-ordering",
-                      "fips204.alg15.hint-trailing-zeros"],
+    "HintBitUnpack": ["fips204.alg21.hint-decode", "fips204.alg21.hint-weight",
+                      "fips204.alg21.hint-ordering",
+                      "fips204.alg21.hint-trailing-zeros"],
     "sigDecode": ["fips204.alg08.sig-length"],
 }
 
@@ -51,7 +51,7 @@ SPEC_TO_CLAUSE = {
 SITE_TO_CLAUSE = {
     "mlk_kem_check_pk": "fips203.s7.2.ek-modulus",
     "mlk_kem_check_sk": "fips203.s7.3.dk-hash",
-    "mld_sig_unpack_hints": "fips204.alg15.hint-decode",   # refined below
+    "mld_sig_unpack_hints": "fips204.alg21.hint-decode",   # refined below
     # mld_sign_verify_internal raises INVALID_SIGNATURE from several distinct
     # checks; the snippet rules below separate them and this is the fallback.
     "mld_sign_verify_internal": "fips204.alg08.verify-decision",
@@ -63,9 +63,9 @@ SITE_TO_CLAUSE = {
 # individually elsewhere in this project. Matched on the check text so a reviewer
 # can confirm the attribution by reading the source.
 SNIPPET_TO_CLAUSE = [
-    ("new_hint_count > MLDSA_OMEGA", "fips204.alg15.hint-weight"),
-    ("packed_hints[j] <= packed_hints[j - 1]", "fips204.alg15.hint-ordering"),
-    ("packed_hints[j] != 0", "fips204.alg15.hint-trailing-zeros"),
+    ("new_hint_count > MLDSA_OMEGA", "fips204.alg21.hint-weight"),
+    ("packed_hints[j] <= packed_hints[j - 1]", "fips204.alg21.hint-ordering"),
+    ("packed_hints[j] != 0", "fips204.alg21.hint-trailing-zeros"),
     ("mld_polyvecl_chknorm(z", "fips204.alg08.z-inf-norm"),
     ("mld_ct_memcmp(c, c2", "fips204.alg08.commitment-hash"),
     ("cmp == 0", "fips204.alg08.commitment-hash"),
@@ -81,15 +81,23 @@ def clause_for_site(site: dict) -> str | None:
 
 
 # Which clause a disposition can produce a violating input for. From D3.
+# Keyed on (algorithm, member) because member names collide across enums:
+# ModifyMessage is declared in both MLDSASignatureDisposition and
+# SLHDSASignatureDisposition, so a bare-name lookup attributes SLH-DSA's
+# disposition to an ML-DSA clause.
 DISPOSITION_TO_CLAUSE = {
-    "ValuesTooLarge": "fips203.s7.2.ek-modulus",
-    "ModifyH": "fips203.s7.3.dk-hash",
-    "ModifyZ": "fips204.alg08.z-inf-norm",
-    "ModifyHint": "fips204.alg15.hint-decode",
-    "ModifySignature": "fips204.alg08.commitment-hash",
-    "ModifyMessage": "fips204.alg08.commitment-hash",
-    "ModifySignatureTooLarge": "fips205.alg20.sig-length",
-    "ModifySignatureTooSmall": "fips205.alg20.sig-length",
+    ("ML-KEM", "ValuesTooLarge"): "fips203.s7.2.ek-modulus",
+    ("ML-KEM", "ModifyH"): "fips203.s7.3.dk-hash",
+    ("ML-DSA", "ModifyZ"): "fips204.alg08.z-inf-norm",
+    ("ML-DSA", "ModifyHint"): "fips204.alg21.hint-decode",
+    ("ML-DSA", "ModifySignature"): "fips204.alg08.commitment-hash",
+    ("ML-DSA", "ModifyMessage"): "fips204.alg08.commitment-hash",
+    ("SLH-DSA", "ModifySignatureTooLarge"): "fips205.alg20.sig-length",
+    ("SLH-DSA", "ModifySignatureTooSmall"): "fips205.alg20.sig-length",
+    ("SLH-DSA", "ModifyMessage"): "fips205.alg20.root-compare",
+    ("SLH-DSA", "ModifySignatureR"): "fips205.alg20.root-compare",
+    ("SLH-DSA", "ModifySignatureSigFors"): "fips205.alg20.root-compare",
+    ("SLH-DSA", "ModifySignatureSigHt"): "fips205.alg20.root-compare",
 }
 
 
@@ -142,7 +150,7 @@ def build(candidates: list[dict], sites: list[dict], dispositions: list[dict]) -
     for d in dispositions:
         if d.get("planned_but_absent"):
             continue
-        clause = DISPOSITION_TO_CLAUSE.get(d.get("name"))
+        clause = DISPOSITION_TO_CLAUSE.get((d.get("algorithm"), d.get("name")))
         if clause:
             disp.setdefault(clause, []).append(d.get("label"))
 
