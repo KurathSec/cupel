@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "cupel"
 dynamic = ["version"]
-description = "A coverage meter over the ACVP validation path for FIPS 203, 204 and 205"
+description = "A coverage meter over the ACVP validation path for FIPS 203 and 204, with partial FIPS 205 coverage"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -25,7 +25,8 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "jsonschema>=4"]
+# jsonschema was declared for a schema-validation layer that was never built.
+dev = ["pytest>=8"]
 
 [project.scripts]
 cupel = "cupel.cli.main:main"

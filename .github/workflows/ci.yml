@@ -28,7 +28,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        # 3.14 is what runs locally and what pyproject advertises, so it is
+        # tested rather than assumed.
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,8 +41,23 @@ jobs:
       - name: Test
         run: pytest
 
+  # The controls gate the headline, so CI has to run them. It did not, which
+  # meant "controls 8/8 green" was enforced by nothing outside a developer's
+  # own terminal.
+  controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Controls
+        run: python bin/selfcheck.py
+
   # A number does not exist until a committed script regenerates it from
-  # committed data. This job proves the committed results still regenerate.
+  # committed data. This job runs regen and checks the headline gate; it does
+  # NOT re-derive results from upstream, which would need network and the
+  # vendored target trees.
   regen:
     runs-on: ubuntu-latest
     steps:
