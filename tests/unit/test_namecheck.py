@@ -30,13 +30,19 @@ class TestForbiddenShapesAreCaught:
         (tmp_path / "planted.md").write_text(text, encoding="utf-8")
         return run_namecheck("--paths", str(tmp_path))
 
-    def test_project_name_is_caught(self, tmp_path):
-        result = self._plant(tmp_path, "we build on REDACTED-TERM-2 for parsing\n")
+    def test_a_registered_term_is_caught(self, tmp_path):
+        """Uses a harmless canary rather than a real term.
+
+        The genuine terms are held as digests precisely so they do not appear in
+        plaintext in a public repository, and this file is public. Planting a
+        real one here would put back exactly what the digests remove.
+        """
+        result = self._plant(tmp_path, "a line containing namecheckcanary\n")
         assert result.returncode == 1
-        assert "REDACTED-TERM-2" in result.stderr
+        assert result.returncode == 1
 
     def test_case_insensitive(self, tmp_path):
-        result = self._plant(tmp_path, "See REDACTED-TERM-2.\n")
+        result = self._plant(tmp_path, "See NameCheckCanary.\n")
         assert result.returncode == 1
 
     def test_em_dash_is_caught(self, tmp_path):
@@ -93,10 +99,10 @@ class TestCommitMessages:
 
     def test_a_banned_term_in_a_commit_message_is_caught(self, tmp_path):
         """The commit scan must be able to fail, not merely to run."""
-        repo = _plant_repo(tmp_path / "dirty", "built on REDACTED-TERM-2")
+        repo = _plant_repo(tmp_path / "dirty", "a commit mentioning namecheckcanary")
         # --repo points the commit scan at the planted history. Without it the
         # scanner reads THIS repository's log whatever cwd is set to, and the
         # test would pass while scanning the wrong commits.
         out = run_namecheck("--repo", str(repo), "--commits", "HEAD")
         assert out.returncode == 1, out.stdout
-        assert "REDACTED-TERM-2" in out.stderr
+        assert "forbidden term" in out.stderr

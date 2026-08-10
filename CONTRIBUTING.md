@@ -81,10 +81,14 @@ are one lineage and the tool must refuse to count them as two independent witnes
 
 ## Vocabulary
 
-`data/namecheck.toml` lists terms this repository must not contain, each with its reason. The
-list exists because the author has a separate double-anonymous submission under review whose rules
-forbid any citation path into it. Reusing that project's vocabulary would manufacture the path its
-rules forbid, so the guarantee is made mechanical here rather than remembered.
+`data/namecheck.toml` holds a set of forbidden terms as sha256 digests, checked by
+`bin/namecheck.py` over every tracked file and over commit messages. The terms are not stored in
+plaintext and neither are the reasons: a repository that lists the words it must not contain,
+with an explanation of why each matters, is itself the thing those words were being kept out of.
 
-If you need a concept the list blocks, rename it. Numbered adjudicated decisions in this
-repository are scope rules and source repairs.
+If the check fires, the report gives you the file and line but not the term. Look at the line and
+rename the concept. Numbered adjudicated decisions in this repository are scope rules and source
+repairs.
+
+The file is generated. To add a term, edit the plaintext source outside this repository and
+regenerate; do not hand-edit the digest list.

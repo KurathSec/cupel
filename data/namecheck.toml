@@ -1,70 +1,47 @@
-# Vocabulary this repository must never contain, and why.
+# Forbidden vocabulary for this repository, held as digests.
 #
-# The author has a separate double-anonymous submission under review. That
-# project's rule is specific: no citation path may exist into it, "including via
-# a public artifact cited together with a claim it makes". A validation-coverage
-# meter has no reason to reference a code-REDACTED-TERM-4 tool, so the practical risk
-# is near zero, but reusing its vocabulary would manufacture the path that its
-# rule forbids. This file makes the guarantee mechanical instead of remembered.
+# The terms are not stored here in plaintext, and neither are the reasons. A
+# public repository that lists the words it must not contain, with an
+# explanation of why each one matters, is itself the thing those words were
+# being kept out of. Digests preserve the check and remove the readable link.
 #
-# `bin/namecheck.py` skips the three paths listed under [skip] below, which are
-# the files that must name the banned terms in order to ban or test them.
-# Everything else tracked by git is scanned, plus commit messages when a range
-# is given.
+# GENERATED. Do not hand-edit. The plaintext source and its generator live
+# outside this repository; regenerate rather than adding an entry here.
+#
+# How the check works: each line is split on non-word characters, lowercased,
+# and every 1-gram to 3-gram is hashed and looked up. So a multi-word or
+# hyphenated term matches however it is spelled or spaced.
 
-[[banned]]
-term = "REDACTED-TERM-2"
-reason = "the project itself, by name"
-regex = false
+algorithm = "sha256"
+ngram_max = 3
 
-[[banned]]
-term = "REDACTED-TERM-0"
-reason = "that project's own bolded self-description; a distinctive phrase"
-regex = false
+digests = [
+  "28bc5a0321a176b7dddaa7dcd60667c22f781010defe168f9e98c91440982659",
+  "5f781176afb67342cbb57a7aa483c075ef1927d3003c547c048a071316f6c2bb",
+  "6f3d1be01da1937da6dd79c53682e23c66af821a8891ed0320d72ba62a6a170f",
+  "7f6c861e3728b034bfaed3af3a4069403aab5f566a3dcf3fe1141da4c6c89ff8",
+  "9d795d7930fbd673bd6638432299dc2eeb39653710cc1e8a51f074e792f9883e",
+  "a6b2cbeb7f34e8016cd93172571ff245881c907185f69326b176b32cb5aa972b",
+  "afbb8e1ec119fdfb6805926f3f11efb549608ef9c350a8b386d941b4879fcd2d",
+  "bf74c26535d810f95fa3eaa8122d1d2467535c6a964f430101817aafa20176c4",
+]
 
-[[banned]]
-term = "REDACTED-TERM-1"
-reason = "its specification vocabulary"
-regex = false
+# Rules that name nothing and therefore stay readable.
 
-[[banned]]
-term = "REDACTED-TERM-3"
-reason = "the REDACTED-TERM-4 feature set it implements; no reason to appear here"
-regex = false
+[[rule]]
+id = "R-1"
+regex = '\brulings?\b'
+note = "reserved term for a numbered adjudicated decision; this project uses scope rule and source repair"
 
-[[banned]]
-term = "REDACTED-TERM-4"
-reason = "the problem domain it owns; unrelated to validation coverage"
-regex = false
-
-[[banned]]
-term = "REDACTED-TERM-6"
-reason = "REDACTED-TERM-4 corpus, adjacent to a pre-registration that must not be touched"
-regex = false
-
-[[banned]]
-term = "REDACTED-TERM-5"
-reason = "its parsing substrate; cupel uses anchored rewrites and needs no grammar"
-regex = false
-
-# `ruling` is the strongest fingerprint of the three, because cupel independently
-# wants the same concept: a numbered, adjudicated decision that a computation
-# cites. It is deliberately renamed here. Adjudicated decisions in this
-# repository are SCOPE-nn scope rules and REPAIR-nn source repairs.
-[[banned]]
-term = '\brulings?\b'
-reason = "its term for a numbered adjudicated decision; use scope rule or source repair"
-regex = true
-
-[[banned]]
-term = "—"
-reason = "em-dash; the author's writing rule forbids them in prose, code and commit messages"
-regex = false
+[[rule]]
+id = "R-2"
+literal = "\u2014"
+note = "em-dash, banned in prose, in code and in commit messages"
 
 [skip]
-# Paths excluded from the scan. Keep this list short and justified.
+# Only one exemption remains. Holding the terms as digests removed the need to
+# exempt this file and the checker: neither contains a term any more. The test
+# file is exempt because it plants the harmless canary on purpose.
 paths = [
-  "data/namecheck.toml",
-  "bin/namecheck.py",
   "tests/unit/test_namecheck.py",
 ]
