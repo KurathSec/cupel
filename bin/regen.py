@@ -166,6 +166,34 @@ def section_disposition() -> dict:
     return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned)}
 
 
+def section_reconciliation() -> dict:
+    """The three derivations set against each other. KT3, mechanised."""
+    _rule("Derivation reconciliation (D1b spec / D2 implementation / D3 disposition)")
+    rows = _rows(RESULTS / "reconciliation.jsonl")
+    if not rows:
+        print(f"  cells: {NA} (reconciliation not yet run)")
+        return {"defined": False}
+    MEAN = {
+        "123": "all three agree",
+        "12": "specified and implemented, but no disposition can produce a violating input",
+        "13": "specified and producible, but this implementation does not check it",
+        "1": "specified only",
+        "23": "implemented and producible, extraction missed it",
+        "2": "implementation only", "3": "disposition only",
+    }
+    for r_ in sorted(rows, key=lambda r_: r_["clause"]):
+        print(f"  {r_['clause']:40s} {r_['cell']:5s} {MEAN.get(r_['cell'], '?')}")
+    agree = [r_ for r_ in rows if not r_["needs_decision"]]
+    print()
+    print("  " + Rate(len(agree), len(rows), "cells where all three derivations agree").render())
+    struct = [r_ for r_ in rows if r_["cell"] == "12"]
+    if struct:
+        print(count("  structurally unexercisable (implemented, no disposition reaches them)",
+                    len(struct)))
+    return {"defined": True, "n_cells": len(rows), "n_agree": len(agree),
+            "n_structurally_unexercisable": len(struct)}
+
+
 def section_candidates() -> dict:
     """D1b: the candidate clause set, derived from definitions rather than tags."""
     _rule("Clause candidates (D1b, from definitions)")
@@ -413,6 +441,7 @@ SECTIONS = {
     "reasons": section_reasons,
     "disposition": section_disposition,
     "candidates": section_candidates,
+    "reconciliation": section_reconciliation,
     "clauses": section_clauses,
     "verdicts": section_verdicts,
     "misattribution": section_misattribution,
