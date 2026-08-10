@@ -358,10 +358,17 @@ def headline(state: dict) -> int:
     blockers = []
     if not state["controls"].get("all_green"):
         blockers.append("controls are not all green (bin/selfcheck.py)")
-    if not state["clauses"].get("defined"):
-        blockers.append("no clause denominator has been derived")
-    elif not state["clauses"].get("reconciled"):
-        blockers.append("derivations are not reconciled: unadjudicated disagreements remain")
+    # The gate reads the CANDIDATE derivation, not the tag-based one. D1 was
+    # shown to select the wrong set, so gating on it would let a headline
+    # through on the strength of a derivation known to be invalid.
+    cand = state.get("candidates", {})
+    if not cand.get("defined"):
+        blockers.append("no clause candidate set has been derived")
+    elif not cand.get("reconciled"):
+        blockers.append(
+            f"{cand.get('n_undecided')} clause candidate(s) await a recorded decision")
+    if not state.get("clauses", {}).get("defined"):
+        blockers.append("no provenance derivation has been run")
     if not state["verdicts"].get("defined"):
         blockers.append("no exercised verdicts exist")
 
