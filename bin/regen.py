@@ -125,6 +125,12 @@ def section_reasons() -> dict:
     # and the tr1 one carries key-check groups the other does not. Folding them
     # together would double-count and would hide exactly the difference that
     # matters.
+    # Keyed on (release, dir). The file holds one row per (release, dir, reason),
+    # so keying on dir alone stacked all three pinned releases into each bucket
+    # and tripled every count printed here.
+    newest = max(r.get("release", "") for r in rows)
+    rows = [r for r in rows if r.get("release") == newest]
+    print(f"  release {newest}")
     by_dir: dict[str, list[dict]] = {}
     for r in rows:
         by_dir.setdefault(r["dir"], []).append(r)
@@ -233,8 +239,12 @@ def section_clauses() -> dict:
 
     in_scope = [r for r in rows if r.get("surface") == "api_boundary_checkable"]
     unclassified = [r for r in rows if not r.get("surface_rule")]
+    # D1 records carry no api_boundary_checkable surface at all: every row is
+    # out_of_scope or unclassified, so in_scope is empty by construction and the
+    # per-document breakdown it fed was always blank. Report the citation spread
+    # instead, which is what this section is actually about.
     by_doc: dict[str, int] = {}
-    for r in in_scope:
+    for r in rows:
         by_doc[r.get("doc", "?")] = by_doc.get(r.get("doc", "?"), 0) + 1
 
     print("  This is D1, the tag-based extraction, retained as PROVENANCE only.")
@@ -316,12 +326,18 @@ def section_verdicts() -> dict:
         per_release[release] = {"n_clauses": len(per), "n_killed": len(killed),
                                 "n_survived": len(survived), "n_other": len(other)}
 
-    n_surv = {c for per in by_release.values() for c, vs in per.items() if vs <= {"SURVIVED"}}
+    # Witness coverage is reported at the newest pinned release, not unioned
+    # across releases. Unioning is the aggregation this section's docstring
+    # forbids: a clause that survives at one release and dies at another is not
+    # a survivor of the corpus, it is a survivor of that release.
+    newest = max(by_release)
+    surv_newest = {c for c, vs in by_release[newest].items() if vs <= {"SURVIVED"}}
     print()
-    print("  " + Rate(len(n_surv & witnessed), len(n_surv),
-                      "survivors carrying a constructed witness").render())
-    return {"defined": True, "per_release": per_release,
-            "n_survivors": len(n_surv), "n_witnessed": len(n_surv & witnessed)}
+    print("  " + Rate(len(surv_newest & witnessed), len(surv_newest),
+                      f"survivors at {newest} carrying a constructed witness").render())
+    return {"defined": True, "per_release": per_release, "newest": newest,
+            "n_survivors": len(surv_newest),
+            "n_witnessed": len(surv_newest & witnessed)}
 
 
 def section_misattribution() -> dict:
@@ -418,24 +434,39 @@ def headline(state: dict) -> int:
     cand, v = state["candidates"], state["verdicts"]
     pins = state["pins"]["pins"]
 
-    # The denominator of the coverage fraction is the set of clauses that have a
-    # VERDICT, not the candidate set. Printing "26 candidates" beside "3 of 4
-    # exercised" invites the reader to carry 26 into a fraction computed over 4,
-    # which is the same aggregation defect as pooling releases and is worse here
-    # because it is the headline.
-    measured = max((p["n_clauses"] for p in v["per_release"].values()), default=0)
-    unmeasured = cand["n_in_scope"] - measured
+    # Both operands must be CLAUSE IDS. The candidate set counts Cryptol
+    # DEFINITIONS (encapsulationKeyCheck, Verify, HintBitUnpack), while verdicts
+    # count clause ids (fips203.s7.2.ek-modulus). Subtracting one from the other
+    # produced a difference that counted nothing, and it was printed in the
+    # headline. The bridge is the same declared mapping the reconciliation uses.
+    from cupel.clauses import reconcile as _rec
+
+    in_scope_clauses = set()
+    for c in _rows(DATA / "clauses" / "generated" / "candidates.jsonl"):
+        if c.get("proposed_surface") != "api_boundary_checkable":
+            continue
+        in_scope_clauses.update(_rec.SPEC_TO_CLAUSE.get(c["name"].split("::")[-1], []))
+    measured_ids = {r["clause_id"] for r in _rows(RESULTS / "verdicts.jsonl")
+                    if r.get("release")}
+    unmeasured = sorted(in_scope_clauses - measured_ids)
+    orphans = sorted(measured_ids - in_scope_clauses)
+
     print(
-        f"  Of the {cand['n_in_scope']} API-boundary-checkable clause candidates derived from\n"
-        f"  definitions in cryptol-specs @{pins.get('cryptol_specs', '?')[:12]}\n"
-        f"  ({cand['n_in_scope']} of {cand['n_candidates']} definitions at the module surface;\n"
-        f"  {cand['n_untagged_in_scope']} of them carry no citation, so a tag-based derivation\n"
-        f"  cannot see them), {measured} have been put to a mutation and have a verdict.\n"
-        f"  The remaining {unmeasured} are UNMEASURED: no mutation has been written for\n"
-        f"  them, so they are neither exercised nor unexercised, and must not be\n"
-        f"  folded into either count.\n"
-        f"  Against ACVP-Server @{pins.get('acvp_server', '?')[:12]}, over the {measured} measured:"
+        f"  The {cand['n_in_scope']} boundary-checkable definitions derived from\n"
+        f"  cryptol-specs @{pins.get('cryptol_specs', '?')[:12]} "
+        f"({cand['n_in_scope']} of {cand['n_candidates']} at the module surface;\n"
+        f"  {cand['n_untagged_in_scope']} carry no citation, so a tag-based derivation cannot\n"
+        f"  see them) state {len(in_scope_clauses)} distinct normative clauses.\n"
+        f"  {len(measured_ids & in_scope_clauses)} of those have been put to a mutation and\n"
+        f"  have a verdict. The remaining {len(unmeasured)} are UNMEASURED: neither\n"
+        f"  exercised nor unexercised, and not foldable into either count."
     )
+    for c in unmeasured:
+        print(f"      unmeasured: {c}")
+    if orphans:
+        print(f"  WARNING: {len(orphans)} measured clause(s) are not reachable from the "
+              f"candidate set: {orphans}")
+    print(f"  Against ACVP-Server @{pins.get('acvp_server', '?')[:12]}, over those measured:")
     for release, per in sorted(v["per_release"].items()):
         print(f"    {release}: " + Rate(per["n_killed"], per["n_clauses"],
                                         "exercised of those measured").render())

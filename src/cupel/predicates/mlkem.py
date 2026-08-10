@@ -23,10 +23,12 @@ PARAMS = {
 }
 
 
-# Which vector-set function actually receives which input. ACVP emits ek, dk and
-# c on EVERY ML-KEM test object regardless of function, so a guard that asks
-# "is the field present" never fires and every clause reports the whole
-# algorithm as applicable. That is exactly the inflation base.py says the
+# Which vector-set function actually receives which input. ACVP emits ek and dk
+# on EVERY ML-KEM test object regardless of function, so a guard that asks "is
+# the field present" never fires for the five ek and dk clauses and each of them
+# reported all 435 cases as applicable. The ciphertext clause WAS gated by
+# presence, and its 240 was still wrong: `c` is carried by the 150 encapsulation
+# cases, which produce a ciphertext rather than receiving one. That is exactly the inflation base.py says the
 # not-applicable return exists to prevent, and the premise of its example was
 # false for the pinned files: a decapsulation case does carry an `ek` in the
 # JSON, it just never passes one to the function under test.

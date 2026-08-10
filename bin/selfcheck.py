@@ -138,6 +138,41 @@ def _wit1():
     return bad == 0, f"{bad} of {checked} witnesses disagree with their own record"
 
 
+@control("ID-1", "every clause id in use is a registered id")
+def _id1():
+    """WIT-1 compares each witness only against itself, so nine rows naming a
+    clause that had been renamed away passed it while joining to nothing. An id
+    that exists in no derivation is an orphan however self-consistent its row is,
+    so ids are checked against one canonical list.
+
+    The list includes clauses with no predicate on purpose: the commitment hash
+    is deliberately unimplemented, and hint-decode, verify-decision and
+    root-compare are umbrella or unmodelled clauses. Requiring a predicate would
+    fail on four legitimate ids.
+    """
+    import tomllib
+
+    path = DATA / "clauses" / "ids.toml"
+    if not path.exists():
+        return None, "no canonical id list"
+    known = set(tomllib.loads(path.read_text(encoding="utf-8"))["clause_ids"])
+    seen: dict[str, set[str]] = {}
+    for f in list((REPO / "witness").glob("*.jsonl")) + [
+            RESULTS / "verdicts.jsonl", RESULTS / "columns.jsonl",
+            RESULTS / "reconciliation.jsonl"]:
+        for row in jsonl.read(f):
+            for key in ("clause_id", "clause"):
+                if row.get(key):
+                    seen.setdefault(row[key], set()).add(f.name)
+    for d in sorted((DATA / "mutations").rglob("*.toml")):
+        rec = tomllib.loads(d.read_text(encoding="utf-8"))
+        seen.setdefault(rec["clause_id"], set()).add(d.name)
+    orphans = sorted(set(seen) - known)
+    return not orphans, (
+        f"{len(seen)} distinct ids in use, {len(orphans)} not registered"
+        + (f": {orphans}" if orphans else ""))
+
+
 @control("PRED-1", "every registered prediction matches its recorded verdict")
 def _pred1():
     """A prediction registered before a run is the only thing that makes the run
@@ -182,11 +217,12 @@ def _na1():
     return ok, "Rate and mean distinguish undefined from zero"
 
 
-@control("BAT-1", "the batteries agree with the corpus on parameter sizes")
+@control("BAT-1", "every algorithm measured has a battery registered")
 def _bat1():
-    """A wrong structural constant shows up as a valid case failing its own
-    length check, which PC-1 would catch, so this reports the sizes explicitly
-    to make the agreement visible rather than implicit."""
+    """This is a set-membership test and nothing more, retitled to say so. It
+    checks that no algorithm appears in the matrix without a battery to evaluate
+    it. Structural constants are covered by PC-1: a wrong size makes a valid case
+    fail its own length check."""
     rows = list(jsonl.read(RESULTS / "violation_matrix.jsonl"))
     if not rows:
         return None, "violation matrix not built"

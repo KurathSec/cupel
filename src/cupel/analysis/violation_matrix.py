@@ -33,12 +33,19 @@ caught. The mutant survived.
 
 The reason is that "isolated" means isolated among the clauses this battery
 MODELS, and the FIPS 204 commitment hash is deliberately not modelled because
-computing it needs the whole verification path. That check is a universal
-backstop for signature verification: any perturbation of a signature changes w1
-and therefore changes c-tilde, so every malformed-signature case is rejected by
-it regardless of which structural clause is deleted upstream. Removing the
+computing it needs the whole verification path. That check is a NEAR-universal
+backstop for signature verification: a perturbation of a signature generally
+changes w1 and therefore c-tilde, so a malformed-signature case is usually
+rejected by it whichever structural clause is deleted upstream. Removing the
 trailing-zeros check does not make those 20 cases verify; it just moves where
 they are rejected.
+
+Near-universal rather than universal, and this project's own verdicts show the
+gap: hint-ordering is recorded KILLED while hint-trailing-zeros and hint-weight
+survive on the same corpus. So some malformed hints do verify once their
+structural check is removed, presumably because the decoded hint stays
+semantically equivalent. Stating the backstop as universal would be an overclaim
+the mutation results refute.
 
 So the matrix predicts survival soundly and predicts death only conditionally.
 A clause whose violations are all subsumed by a downstream check cannot be

@@ -33,6 +33,9 @@ TEXT_SUFFIXES = {
     ".py", ".md", ".toml", ".json", ".jsonl", ".yaml", ".yml", ".txt", ".cfg",
     ".ini", ".sh", ".c", ".h", ".cc", ".cpp", ".rs", ".go", ".csv", ".tex",
     ".cff", ".patch", ".diff", ".in", "",
+    # A bibliography is the canonical place a citation path into the anonymous
+    # submission would appear, so the firewall must read one.
+    ".bib", ".bbl", ".rst", ".org", ".adoc", ".xml", ".html", ".lock",
 }
 
 
@@ -96,8 +99,10 @@ def scan_text(text: str, where: str, terms: list[Term]) -> list[Hit]:
     return hits
 
 
-def scan_files(paths: list[Path], terms: list[Term], skip: set[str]) -> list[Hit]:
+def scan_files(paths: list[Path], terms: list[Term], skip: set[str],
+               scanned: list[str] | None = None) -> list[Hit]:
     hits = []
+    scanned = scanned if scanned is not None else []
     for path in paths:
         try:
             rel = str(path.relative_to(REPO))
@@ -109,8 +114,16 @@ def scan_files(paths: list[Path], terms: list[Term], skip: set[str]) -> list[Hit
             continue
         try:
             text = path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
+        except (UnicodeDecodeError, OSError) as exc:
+            # A file the scanner cannot read is not a file it cleared. Skipping
+            # silently let a firewall report success over content it never saw,
+            # so an unreadable text file is itself a violation.
+            hits.append(Hit(rel, 0, "<unreadable>",
+                            f"could not be scanned ({type(exc).__name__}); "
+                            "a file the firewall cannot read is not a file it cleared",
+                            ""))
             continue
+        scanned.append(rel)
         hits.extend(scan_text(text, rel, terms))
     return hits
 
@@ -152,13 +165,16 @@ def main() -> int:
     else:
         files, scope = tracked_files(), "tracked files"
 
-    hits = scan_files(files, terms, skip)
+    scanned: list[str] = []
+    hits = scan_files(files, terms, skip, scanned)
     if args.commits:
         hits.extend(scan_commits(args.commits, terms))
 
-    n_files = len([p for p in files if p.suffix.lower() in TEXT_SUFFIXES])
+    n_skipped = len(files) - len(scanned)
     if not hits:
-        print(f"namecheck: clean. {len(terms)} terms checked over {n_files} text files in {scope}.")
+        print(f"namecheck: clean. {len(terms)} terms checked over {len(scanned)} files "
+              f"actually read in {scope}; {n_skipped} not scanned (skip list or "
+              f"non-text suffix).")
         if args.commits:
             print(f"namecheck: commit messages in {args.commits} clean.")
         return 0

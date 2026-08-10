@@ -1,0 +1,33 @@
+# Every clause id this project may legitimately use.
+#
+# A rename that misses one artifact leaves an orphan id that joins to nothing,
+# and a control comparing each record only against itself cannot see it: nine
+# witness rows survived the alg15 to alg21 rename that way, internally
+# self-consistent and referentially dead. ID-1 checks every id in use against
+# this list, so a rename has to land here too.
+#
+# Four of these have no predicate, deliberately: the commitment hash needs the
+# whole verification path, hint-decode is the umbrella over three sub-clauses,
+# verify-decision is the implementation's single exit, and root-compare needs
+# the SLH-DSA hypertree.
+
+clause_ids = [
+  "fips203.s7.2.ek-length",
+  "fips203.s7.2.ek-modulus",
+  "fips203.s7.3.ct-length",
+  "fips203.s7.3.dk-embedded-ek-modulus",
+  "fips203.s7.3.dk-hash",
+  "fips203.s7.3.dk-length",
+  "fips204.alg08.commitment-hash",
+  "fips204.alg08.sig-length",
+  "fips204.alg08.verify-decision",
+  "fips204.alg08.z-inf-norm",
+  "fips204.alg21.hint-decode",
+  "fips204.alg21.hint-ordering",
+  "fips204.alg21.hint-trailing-zeros",
+  "fips204.alg21.hint-weight",
+  "fips205.alg20.root-compare",
+  "fips205.alg20.sig-length",
+  "fips205.alg24.ctx-length",
+  "fips205.s3.1.pk-length",
+]

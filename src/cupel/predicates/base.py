@@ -42,10 +42,15 @@ class Predicate:
         """True if the case violates this clause, False if not, None if the
         clause does not apply to this case at all.
 
-        None is distinct from False on purpose. A decapsulation case has no
-        encapsulation key, so the ek clauses are not-applicable rather than
-        satisfied, and counting them as satisfied would inflate the denominator
-        of every coverage statement.
+        None is distinct from False on purpose: a clause the input cannot
+        violate is not a clause the input satisfies, and counting it as
+        satisfied inflates the denominator of every coverage statement.
+
+        The example this used to give was wrong and is worth keeping as a
+        warning. It said a decapsulation case "has no encapsulation key", but
+        ACVP emits `ek` on every ML-KEM test object, so a presence check never
+        fired. Applicability is a property of which function receives the input,
+        not of which fields the JSON happens to carry. See mlkem.py.
         """
         try:
             return self.fn(case, group)

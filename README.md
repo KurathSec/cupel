@@ -68,10 +68,11 @@ unrun experiment is not. `cupel.util.na.Rate` is the only division primitive in 
 it raises rather than return a ratio above 1.0.
 
 **Mutations are anchored content rewrites, not line ranges.** Each mutation record names the file,
-its hash at the pinned commit, the exact anchor text and the required occurrence count. If the
-anchor does not match exactly, the result is `NOT_APPLICABLE`, recorded, never guessed. For a tool
-whose headline is "this mutant survived", a silently misapplied mutation is the worst available
-failure, and line ranges fail silently under upstream drift.
+the pinned target commit, the exact anchor text and the required occurrence count. If the anchor
+does not match exactly, `check()` reports the mismatch and `apply()` refuses; it is never applied
+to a best guess. Control MUT-1 runs that check with no build at all, so drift surfaces the moment
+a pin moves. For a tool whose headline is "this mutant survived", a silently misapplied mutation
+is the worst available failure, and line ranges fail silently under upstream drift.
 
 ## Scope, and what this does not show
 

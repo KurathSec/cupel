@@ -42,8 +42,10 @@ shifting the count.
 
 ## Adding a mutation
 
-A mutation is a TOML record in `data/mutations/<target>/`, naming the file, its hash at the pinned
-commit, the exact anchor text, the replacement and the required occurrence count. Do not use line
+A mutation is a TOML record in `data/mutations/<target>/`, naming the file, the exact anchor text, the
+replacement and the required occurrence count. The pinned target commit is recorded in
+`target_commit`; there is no per-file hash field, and MUT-1 verifies the anchor against the
+vendored tree instead. Do not use line
 numbers. Do not use `patch` files, which fuzz-apply by default.
 
 Prefer `0 && cond` over deleting a block, so surrounding variables stay used under the strict
