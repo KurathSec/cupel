@@ -1,0 +1,34 @@
+schema = "mutation/1"
+mutation_id = "mlkem-native:fips203.s7.3.dk-hash:neutralize"
+clause_id = "fips203.s7.3.dk-hash"
+target = "mlkem-native"
+target_commit = "c4f993c3f1d20b77a7c3f0144c7ffaadc9943b0d"
+state = "located"
+class = "neutralize_predicate"
+intent = "Make the decapsulation key hash check never reject."
+kill_mode = "reject_flip"
+located_by = "proofs/cbmc/kem_check_sk"
+
+[[edit]]
+path = "mlkem/src/kem.c"
+# Neutralise the rejection branch rather than the comparison itself. Suppressing
+# the call left `test` written and never read, which this repository compiles as
+# an error. Here the hash is still computed and still compared; only the verdict
+# is defanged, which is a cleaner statement of "this check no longer rejects"
+# and cannot trip an unused-value diagnostic.
+anchor = """
+            ? MLK_ERR_INVALID_SK
+"""
+replacement = """
+            ? 0
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+witness_reason_labels = ["modified H"]
+prediction = """
+DIES. The matrix reports 30 isolated violations at every pinned release, so the
+modified-H vectors should catch its removal. This doubles as a second sentinel
+for the ML-KEM arm. Registered before the run.
+"""

@@ -1,0 +1,30 @@
+schema = "mutation/1"
+mutation_id = "mlkem-native:fips203.s7.2.ek-modulus:neutralize"
+clause_id = "fips203.s7.2.ek-modulus"
+target = "mlkem-native"
+target_commit = "c4f993c3f1d20b77a7c3f0144c7ffaadc9943b0d"
+state = "located"
+class = "neutralize_predicate"
+intent = "Make the encapsulation key re-encode check never reject."
+kill_mode = "reject_flip"
+located_by = "proofs/cbmc/kem_check_pk names this function as the normative check"
+
+[[edit]]
+path = "mlkem/src/kem.c"
+anchor = """
+  ret = mlk_ct_memcmp(pk, p_reencoded, MLKEM_POLYVECBYTES) ? MLK_ERR_INVALID_PK
+"""
+replacement = """
+  ret = 0 ? MLK_ERR_INVALID_PK
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = true
+witness_reason_labels = ["noisy linear system values too large"]
+prediction = """
+DIES at this release. The violation matrix reports 30 isolated violations of this
+clause at r2026-07-31, so the tr1 keyCheck vectors should catch its removal. At
+r2026-07-24 the same mutant would survive, since the column is empty there.
+Registered before the run.
+"""

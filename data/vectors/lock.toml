@@ -41,10 +41,34 @@ fetched_utc = "2026-08-10T03:06:21Z"
 [[entry]]
 release     = "r2026-07-24"
 commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/expectedResults.json"
+sha256      = "sha256:dc26ee2657a1da2849081c2e171f16156634242588725f5d511cac24295aebd9"
+bytes       = 194889
+fetched_utc = "2026-08-10T09:57:22Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
 path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/internalProjection.json"
 sha256      = "sha256:011c130c4baa6e24b880527a348d1824c0445334b41e55df8d89172ea655ff4f"
 bytes       = 1780191
 fetched_utc = "2026-08-10T03:06:11Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/prompt.json"
+sha256      = "sha256:e38f16fa137e456d2ad04b8a6a331b1baff83ea6f7cd004fd223f9ec38d674e3"
+bytes       = 712714
+fetched_utc = "2026-08-10T09:57:22Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203/expectedResults.json"
+sha256      = "sha256:81ebccbf29c8c2704061c6704d839010458a15645f2cf3a584c4c1631c3ee6b1"
+bytes       = 190940
+fetched_utc = "2026-08-10T09:57:21Z"
 
 [[entry]]
 release     = "r2026-07-24"
@@ -57,10 +81,34 @@ fetched_utc = "2026-08-10T03:06:10Z"
 [[entry]]
 release     = "r2026-07-24"
 commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203/prompt.json"
+sha256      = "sha256:6762743ebfac4497d437cd95111fe6b3501aec51b3ba74bef31d1360a224a8ca"
+bytes       = 636669
+fetched_utc = "2026-08-10T09:57:21Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/expectedResults.json"
+sha256      = "sha256:a253d0ad91c95ebea5b409673defef0aa49d65d4ed72286399e2e798ddf073a4"
+bytes       = 544032
+fetched_utc = "2026-08-10T09:57:21Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
 path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/internalProjection.json"
 sha256      = "sha256:d7a62a2c3476957f56dd8d24f9004ea6776ccfe995ffe71a65bb9506dc9c7b1b"
 bytes       = 558841
 fetched_utc = "2026-08-10T03:06:09Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/prompt.json"
+sha256      = "sha256:3f9ce34f6c836c77958bad2729e837c3b213f44ac36c3065976e7acca6389523"
+bytes       = 16066
+fetched_utc = "2026-08-10T09:57:20Z"
 
 [[entry]]
 release     = "r2026-07-24"
