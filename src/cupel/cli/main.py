@@ -154,16 +154,18 @@ def cmd_matrix(args) -> int:
 
     from ..analysis import misattribution as misattr
     from ..analysis import violation_matrix as vm
-    from ..predicates import mlkem as mlkem_predicates
 
     entries = lockmod.load()
     all_rows, all_cols, all_findings = [], [], []
-    known = {p.clause_id for p in mlkem_predicates.PREDICATES}
+    # Clause columns are per algorithm. Evaluating an ML-KEM clause against an
+    # ML-DSA case would report six spurious ABSENT columns and a coverage rate
+    # of zero, which is a statement about the battery rather than the corpus.
+    known = {p.clause_id for battery in vm.BATTERIES.values() for p in battery}
     labels = misattr.load_labels()
 
     for release_id in _release_ids(args):
         rel = pinsmod.release(release_id)
-        rows = []
+        by_algo: dict[str, list] = {}
         for vd in pinsmod.vector_dirs():
             if vd.algorithm not in vm.BATTERIES:
                 continue
@@ -171,41 +173,57 @@ def cmd_matrix(args) -> int:
                 continue
             path = pinsmod.vector_path(vd.dir, pinsmod.REASON_FILE)
             doc = json.loads(lockmod.ensure(release_id, path, entries))
-            rows += vm.build(doc, vd.dir, vd.algorithm, vd.mode)
+            by_algo.setdefault(vd.algorithm, []).extend(
+                vm.build(doc, vd.dir, vd.algorithm, vd.mode))
 
-        clause_ids = [p.clause_id for p in mlkem_predicates.PREDICATES]
-        cols = vm.columns(rows, clause_ids)
-        findings = misattr.check(rows, labels, known)
+        n_total = sum(len(v) for v in by_algo.values())
+        print(f"\nrelease {release_id} @ {rel.commit[:12]}   {n_total} cases")
 
-        print(f"\nrelease {release_id} @ {rel.commit[:12]}   {len(rows)} cases")
-        print(f"  {'status':9s} {'clause':44s} {'violating':>10s} {'isolated':>9s} {'applicable':>11s}")
-        for c in cols:
-            print(f"  {c.status:9s} {c.clause_id:44s} {c.n_violating:>10d} "
-                  f"{c.n_isolated:>9d} {c.n_applicable:>11d}")
-        print("  " + vm.coverage(cols).render())
+        for algorithm in sorted(by_algo):
+            rows = by_algo[algorithm]
+            clause_ids = [p.clause_id for p in vm.BATTERIES[algorithm]]
+            cols = vm.columns(rows, clause_ids)
+            findings = misattr.check(rows, labels, known)
 
-        for c in cols:
-            if c.status == "ABSENT":
-                print(f"    ABSENT: no case violates {c.clause_id}. "
-                      f"Deleting this check cannot be caught by this corpus.")
-            elif c.status == "MASKED":
-                masks = sorted(c.co_violated_with.items(), key=lambda kv: -kv[1])
-                print(f"    MASKED: {c.clause_id} is never violated alone; "
-                      f"always with {masks[0][0]} ({masks[0][1]} cases)")
+            print(f"\n  {algorithm}  ({len(rows)} cases)")
+            print(f"    {'status':9s} {'clause':44s} {'violating':>10s} "
+                  f"{'isolated':>9s} {'applicable':>11s}")
+            for c in cols:
+                print(f"    {c.status:9s} {c.clause_id:44s} {c.n_violating:>10d} "
+                      f"{c.n_isolated:>9d} {c.n_applicable:>11d}")
+            print("    " + vm.coverage(cols).render())
 
-        scored = [f for f in findings if f.status in ("attributed", "misattributed")]
-        bad = [f for f in scored if f.misattributed]
-        print("  " + Rate(len(bad), len(scored), "negative vectors misattributed").render())
-        for f in bad[:1] if bad else []:
-            print(f"    example tcId {f.tc_id}: label {f.reason!r} names {f.claimed}, "
-                  f"but the case violates {sorted(f.violated) or 'nothing'}")
-        skipped = [f for f in findings if f.status in ("no-predicate", "unmapped-label")]
-        if skipped:
-            print(f"  not scored (no predicate or unmapped label): {len(skipped)}")
+            for c in cols:
+                if c.status == "ABSENT":
+                    print(f"      ABSENT: no case violates {c.clause_id}. "
+                          f"Deleting this check cannot be caught by this corpus.")
+                elif c.status == "MASKED":
+                    masks = sorted(c.co_violated_with.items(), key=lambda kv: -kv[1])
+                    print(f"      MASKED: {c.clause_id} is never violated alone; "
+                          f"always with {masks[0][0]} ({masks[0][1]} cases)")
 
-        all_rows += [r.as_record() | {"release": release_id} for r in rows]
-        all_cols += [c.as_record() | {"release": release_id} for c in cols]
-        all_findings += [f.as_record() | {"release": release_id} for f in findings]
+            scored = [f for f in findings if f.status in ("attributed", "misattributed")]
+            bad = [f for f in scored if f.misattributed]
+            print("    " + Rate(len(bad), len(scored), "negative vectors misattributed").render())
+            by_reason: dict[str, list] = {}
+            for f in bad:
+                by_reason.setdefault(f.reason, []).append(f)
+            for reason in sorted(by_reason):
+                fs = by_reason[reason]
+                n_tot = sum(1 for f in scored if f.reason == reason)
+                print("      " + Rate(len(fs), n_tot, reason).render())
+                ex = fs[0]
+                print(f"        example tcId {ex.tc_id}: label names {ex.claimed}, "
+                      f"case violates {sorted(ex.violated) or 'nothing in this battery'}")
+            skipped = [f for f in findings if f.status in ("no-predicate", "unmapped-label")]
+            if skipped:
+                reasons = sorted({f.reason for f in skipped})
+                print(f"    not scored, no predicate for the clause they name: "
+                      f"{len(skipped)} ({', '.join(reasons)})")
+
+            all_rows += [r.as_record() | {"release": release_id} for r in rows]
+            all_cols += [c.as_record() | {"release": release_id} for c in cols]
+            all_findings += [f.as_record() | {"release": release_id} for f in findings]
 
     lockmod.save(entries)
     RESULTS.mkdir(parents=True, exist_ok=True)
