@@ -7,6 +7,38 @@
 # Regenerate with:  python -m cupel vectors fetch
 
 [[entry]]
+release     = "cryptol-specs"
+commit      = "82023f4bee71e8d6f00e24e926b04e33cf2aacd6"
+path        = "Primitive/Asymmetric/KEM/ML_KEM/Specification.cry"
+sha256      = "sha256:fb2c02824ddc218da9be38938e9b7eb04dbc0e97174426c59402882c1f56218e"
+bytes       = 56652
+fetched_utc = "2026-08-10T10:00:44Z"
+
+[[entry]]
+release     = "cryptol-specs"
+commit      = "82023f4bee71e8d6f00e24e926b04e33cf2aacd6"
+path        = "Primitive/Asymmetric/Signature/ML_DSA/ML_DSA.cry"
+sha256      = "sha256:af6676065df777eb50c1e232e6bf6a6e81326df0923d2aab9ce822251ff38304"
+bytes       = 5311
+fetched_utc = "2026-08-10T10:00:45Z"
+
+[[entry]]
+release     = "cryptol-specs"
+commit      = "82023f4bee71e8d6f00e24e926b04e33cf2aacd6"
+path        = "Primitive/Asymmetric/Signature/ML_DSA/Parameters.cry"
+sha256      = "sha256:9a839a80dc92f3d350dddbad3c4525cc5e7805ec4c0201eef3cbe2c4648e8c8b"
+bytes       = 4430
+fetched_utc = "2026-08-10T10:00:45Z"
+
+[[entry]]
+release     = "cryptol-specs"
+commit      = "82023f4bee71e8d6f00e24e926b04e33cf2aacd6"
+path        = "Primitive/Asymmetric/Signature/ML_DSA/Specification.cry"
+sha256      = "sha256:e39d93552af6837c6f4c3e40d92f4db281cba33532b31a6ad88e8fd8b1bf1ab5"
+bytes       = 52937
+fetched_utc = "2026-08-10T10:00:44Z"
+
+[[entry]]
 release     = "r2026-07-24"
 commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
 path        = "gen-val/json-files/ML-DSA-keyGen-FIPS204/internalProjection.json"

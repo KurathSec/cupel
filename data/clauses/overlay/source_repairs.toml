@@ -1,0 +1,43 @@
+# Defects in the upstream specification text, corrected explicitly.
+#
+# The clause denominator is parsed out of provenance tags in cryptol-specs
+# docstrings. Upstream has real typos in those tags, and there are only two ways
+# to handle them: tolerate malformed tags with a loose regex, which lets N drift
+# whenever anyone writes a tag slightly differently, or declare each defect here
+# and refuse anything else.
+#
+# This file is the second option. A tag that does not parse strictly is accepted
+# only if a repair below covers it, and `cupel clauses derive` fails otherwise.
+# The property that matters: N cannot change without a diff in a committed file.
+#
+# It fails in the other direction too. When upstream FIXES one of these, its
+# `observed` string stops appearing, extraction reports a stale repair and exits
+# non-zero rather than silently shifting the count by two.
+#
+# Pinned against GaloisInc/cryptol-specs @ 82023f4bee71e8d6f00e24e926b04e33cf2aacd6
+
+[[repair]]
+id = "REPAIR-01"
+path = "Primitive/Asymmetric/Signature/ML_DSA/Specification.cry"
+lines = [1228, 1240]
+observed = "[FIPS-24]"
+corrected = "[FIPS-204]"
+evidence = """
+The file is the ML-DSA specification and cites [FIPS-204] in 68 other places.
+There is no FIPS 24. The two definitions carrying this tag are HighBits and
+LowBits, which are FIPS 204 Section 7.4 Algorithms 37 and 38, so a strict regex
+drops both of them along with the tag.
+"""
+confidence = "certain"
+
+[[repair]]
+id = "REPAIR-02"
+path = "Primitive/Asymmetric/Signature/ML_DSA/Specification.cry"
+lines = [835]
+observed = "Secetion"
+corrected = "Section"
+evidence = """
+Single-character transposition. The surrounding tag is otherwise well formed and
+cites Algorithm 24, so only the keyword is affected.
+"""
+confidence = "certain"

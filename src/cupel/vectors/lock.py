@@ -107,3 +107,21 @@ def ensure(release_id: str, path: str, entries: dict, repo: str | None = None) -
             fetched_utc=now_utc(),
         )
     return data
+
+
+def ensure_source(key: str, repo: str, commit: str, path: str, entries: dict) -> bytes:
+    """Fetch a pinned file from a repository other than ACVP-Server.
+
+    The clause denominator is derived from cryptol-specs, which is pinned the
+    same way and must be hash-verified the same way. `key` names the pseudo
+    release the entry is filed under, so one lock covers every upstream source.
+    """
+    lookup = (key, path)
+    known = entries.get(lookup)
+    blob, data = fetchmod.fetch(repo, commit, path, expect=known.digest if known else None)
+    if known is None:
+        entries[lookup] = Entry(
+            release=key, commit=commit, path=path,
+            digest=blob.digest, n_bytes=blob.n_bytes, fetched_utc=now_utc(),
+        )
+    return data

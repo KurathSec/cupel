@@ -1,0 +1,112 @@
+# Numbered scope rules. Each decides whether a clause is checkable at the API
+# boundary, and each is counted by bin/regen.py.
+#
+# The headline fraction is over a STATED SUBSET of the standard, never over "the
+# standard". These rules are that statement. A clause with no rule is an error,
+# not a default, and regen refuses to print a fraction while any remain.
+#
+# `auto` rules apply mechanically from structural facts. `manual` rules require
+# a decision recorded in adjudications.jsonl, because the structure alone does
+# not settle them.
+
+[[rule]]
+id = "SCOPE-05"
+verdict = "out"
+mode = "auto"
+match = "scope == local"
+title = "local helper inside a where block"
+reason = """
+A definition inside a where block has no independent API surface. It is
+documented and cited, but nothing outside its parent can call it, so no input at
+the public boundary can target it directly. Excluded, and counted rather than
+dropped so the exclusion is visible.
+"""
+
+[[rule]]
+id = "SCOPE-09"
+verdict = "out"
+mode = "auto"
+match = "definition_kind == property"
+title = "Cryptol property, an internal correctness statement"
+reason = """
+A `property` declares an algebraic identity the specification must satisfy, for
+example that the NTT inverts or that packing round-trips. These are statements
+about the specification's internal consistency, checkable by proof rather than by
+an input at the API boundary. They are not clauses an implementation can violate
+while still producing a well-formed answer.
+"""
+
+[[rule]]
+id = "SCOPE-10"
+verdict = "out"
+mode = "auto"
+match = "citation_kind in (Table, Equation)"
+title = "parameter table or defining equation"
+reason = """
+A Table citation names a parameter set and an Equation citation names a defining
+formula. Neither is a check: getting them wrong changes every output rather than
+causing one input to be accepted when it should be rejected, so they are caught
+by any known-answer test and are not what negative vectors measure.
+"""
+
+[[rule]]
+id = "SCOPE-03"
+verdict = "in"
+mode = "manual"
+title = "decides accept or reject from public inputs"
+reason = """
+The clause determines whether a public-API call accepts or rejects, computably
+from its inputs alone. This is the core of the in-scope set: input validation,
+norm bounds, encoding round trips, hash consistency, length constraints.
+"""
+
+[[rule]]
+id = "SCOPE-04"
+verdict = "in"
+mode = "manual"
+title = "determines a byte-exact output from public inputs"
+reason = """
+The clause fixes an output exactly, given inputs and fixed randomness. Violating
+it is detectable by a known-answer comparison at the boundary.
+"""
+
+[[rule]]
+id = "SCOPE-01"
+verdict = "out"
+mode = "manual"
+title = "constrains internal state not observable at the boundary"
+
+[[rule]]
+id = "SCOPE-02"
+verdict = "out"
+mode = "manual"
+title = "timing, side channel or memory hygiene"
+
+[[rule]]
+id = "SCOPE-06"
+verdict = "in"
+mode = "manual"
+title = "statement about what the module may expose, answered by the symbol table"
+reason = """
+For example the FIPS 203 requirement that K-PKE not be available as a stand-alone
+scheme. Checkable at the boundary, but by reading exported symbols rather than by
+running a vector, so it belongs to the reachability arm.
+"""
+
+[[rule]]
+id = "SCOPE-07"
+verdict = "out"
+mode = "manual"
+title = "key lifecycle, storage or destruction"
+
+[[rule]]
+id = "SCOPE-08"
+verdict = "in"
+mode = "manual"
+title = "mandates that one operation be invoked before another"
+reason = """
+For example the inline warning that encapsulationKeyCheck MUST be called before
+use. A sequencing obligation, checkable by deleting the call rather than the
+predicate, which is why the mutation records carry call-site edits as well as
+predicate edits.
+"""
