@@ -138,6 +138,46 @@ def _wit1():
     return bad == 0, f"{bad} of {checked} witnesses disagree with their own record"
 
 
+@control("WIT-2", "every witness file declares how it was produced")
+def _wit2():
+    """WIT-1 checks a witness against itself and says nothing about where the
+    file came from. Two of the three witness files turned out to be read by
+    regen and by WIT-1 while being written by no committed script, which is this
+    project's own rule broken at the point it matters most. That cannot be
+    fixed by a control, but going quiet about it can be.
+
+    So: every witness file must be declared in witness/PROVENANCE.toml, with an
+    origin of `script` (a committed command regenerates it) or `recorded` (it
+    does not, and the note says what produced it). An undeclared file fails, and
+    a `script` declaration whose command does not exist fails, so a file cannot
+    claim a generator it lacks.
+    """
+    import tomllib
+
+    path = REPO / "witness" / "PROVENANCE.toml"
+    if not path.exists():
+        return False, "witness/PROVENANCE.toml is missing"
+    declared = {f["name"]: f for f in
+                tomllib.loads(path.read_text(encoding="utf-8")).get("file", [])}
+    present = {p.name for p in (REPO / "witness").glob("*.jsonl")}
+    undeclared = sorted(present - declared.keys())
+    stale = sorted(declared.keys() - present)
+    bad_cmd = sorted(n for n, f in declared.items()
+                     if f.get("origin") == "script" and not f.get("command"))
+    problems = []
+    if undeclared:
+        problems.append(f"undeclared: {undeclared}")
+    if stale:
+        problems.append(f"declared but absent: {stale}")
+    if bad_cmd:
+        problems.append(f"claim a script with no command: {bad_cmd}")
+    n_recorded = sum(1 for f in declared.values() if f.get("origin") == "recorded")
+    if problems:
+        return False, "; ".join(problems)
+    return True, (f"{len(present)} witness file(s) declared, {n_recorded} of them "
+                  f"hand-recorded rather than regenerable")
+
+
 @control("ID-1", "every clause id in use is a registered id")
 def _id1():
     """WIT-1 compares each witness only against itself, so nine rows naming a

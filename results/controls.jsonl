@@ -3,6 +3,7 @@
 {"control_id":"MUT-1","note":"0 of 8 anchors drifted","passed":true,"schema":"control/1","skipped":false,"title":"every mutation anchor matches its pinned source"}
 {"control_id":"MUT-5","note":"0 of 4 sentinel runs survived","passed":true,"schema":"control/1","skipped":false,"title":"every declared sentinel was killed"}
 {"control_id":"WIT-1","note":"0 of 247 witnesses disagree with their own record","passed":true,"schema":"control/1","skipped":false,"title":"every witness violates exactly the clause it claims"}
+{"control_id":"WIT-2","note":"3 witness file(s) declared, 2 of them hand-recorded rather than regenerable","passed":true,"schema":"control/1","skipped":false,"title":"every witness file declares how it was produced"}
 {"control_id":"ID-1","note":"18 distinct ids in use, 0 not registered","passed":true,"schema":"control/1","skipped":false,"title":"every clause id in use is a registered id"}
 {"control_id":"PRED-1","note":"7 predictions checked, 0 failed without an outcome field acknowledging it","passed":true,"schema":"control/1","skipped":false,"title":"every registered prediction matches its recorded verdict"}
 {"control_id":"NA-1","note":"Rate and mean distinguish undefined from zero","passed":true,"schema":"control/1","skipped":false,"title":"an empty aggregation prints NA rather than 0"}

@@ -32,16 +32,36 @@ enum      = "MLKEMEncapsulationKeyDisposition"
 [[function]]
 id        = "fips203.decapsulationKeyCheck"
 algorithm = "ML-KEM"
-citation  = "FIPS 203, section 7.3, decapsulation key check"
-# The section requires, before decapsulation: a ciphertext type check on the
-# length, a decapsulation key type check on the length, and a hash check that
-# the value embedded in the decapsulation key matches H(ek).
+citation  = "FIPS 203, section 7.3, decapsulation input check, the two key checks"
+# CORRECTED. This entry first charged all three of section 7.3's checks to the
+# decapsulation-KEY enum. Only two of them are checks on the key: its length and
+# the hash embedded in it. The third is a length check on the CIPHERTEXT and
+# belongs to the decapsulation function below, which is where this project's own
+# violation matrix already put it, under the separate clause id
+# fips203.s7.3.ct-length.
+#
+# The error inflated the mandated side of a comparison this project uses to
+# argue the mandated side is larger, so it ran in our favour. It was caught in
+# review, not here, which is the wrong way round for a file whose header says
+# judgement calls are made against us.
 clauses   = [
-  "fips203.s7.3.ct-length",
   "fips203.s7.3.dk-length",
   "fips203.s7.3.dk-hash",
 ]
 enum      = "MLKEMDecapsulationKeyDisposition"
+
+[[function]]
+id        = "fips203.decapsulation"
+algorithm = "ML-KEM"
+citation  = "FIPS 203, section 7.3, decapsulation input check, the ciphertext check"
+# The remaining check of section 7.3: the ciphertext must be 32(du*k + dv)
+# bytes. The enum's one negative member, ModifyCiphertext, perturbs bytes without
+# changing the length, which is why fips203.s7.3.ct-length sits at zero isolated
+# violations at every pinned release.
+clauses   = [
+  "fips203.s7.3.ct-length",
+]
+enum      = "MLKEMDecapsulationDisposition"
 
 [[function]]
 id        = "fips204.verify"

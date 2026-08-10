@@ -586,13 +586,21 @@ def cmd_divergence(args) -> int:
 
     entries = lockmod.load()
     releases = pinsmod.releases()
-    path = pinsmod.vector_path("ML-KEM-encapDecap-FIPS203-tr1", pinsmod.REASON_FILE)
+    # BOTH encapsulation directories. The first version read only the tr1 set
+    # and reported 15 invalid keys per release, which is half the population:
+    # the non-tr1 set carries 15 more, all distinct. The violation matrix had
+    # been reporting 30 isolated violations for the same clause all along, so
+    # the two artifacts disagreed and the smaller number reached the paper.
+    dirs = [d.dir for d in pinsmod.vector_dirs()
+            if d.algorithm == "ML-KEM" and d.mode == "encapDecap"]
 
     keys, sources = [], []
     for rel in releases:
-        projection = json.loads(
-            lockmod.ensure(rel.id, path, entries).decode("utf-8-sig"))
-        keys += dv.measure_release(rel.id, projection)
+        for vdir in dirs:
+            projection = json.loads(
+                lockmod.ensure(rel.id, pinsmod.vector_path(vdir, pinsmod.REASON_FILE),
+                               entries).decode("utf-8-sig"))
+            keys += dv.measure_release(rel.id, projection, vdir)
         for src in pinsmod.manipulator_files():
             data = lockmod.ensure(rel.id, src, entries)
             sources.append(dv.digest_source(rel.id, rel.commit, src, data))
@@ -642,7 +650,29 @@ def cmd_divergence(args) -> int:
     elif unchanged:
         print("\n  No divergence: the source did not change and neither did the data.")
 
+    # How near the corpus gets to the bound it never crosses. An empty column
+    # says nothing about whether the vectors were aimed at the bound and missed
+    # or never aimed at all, and the answer differs by release.
+    margins, msum = [], []
+    zpath = pinsmod.vector_path("ML-DSA-sigVer-FIPS204", pinsmod.REASON_FILE)
+    for rel in releases:
+        doc = json.loads(lockmod.ensure(rel.id, zpath, entries).decode("utf-8-sig"))
+        margins += dv.z_margins(doc, rel.id, "modified signature - z")
+    lockmod.save(entries)
+    if margins:
+        msum = dv.summarise_margins(margins)
+        print()
+        print(f"  Largest |z| in the cases labelled for a large z, against the bound")
+        print(f"  {'release':12s} {'param set':12s} {'cases':>5s} {'peak |z|':>10s} "
+              f"{'bound':>8s} {'closest':>8s} {'violating':>10s}")
+        for r in msum:
+            print(f"  {r['release']:12s} {r['param_set']:12s} {r['n_cases']:5d} "
+                  f"{r['max_abs_z_max']:10d} {r['bound']:8d} {r['closest_margin']:8d} "
+                  f"{r['n_violating']:10d}")
+
     RESULTS.mkdir(parents=True, exist_ok=True)
+    if margins:
+        jsonl.write(RESULTS / "z_margins.jsonl", msum)
     jsonl.write(RESULTS / "divergence.jsonl", summary)
     jsonl.write(RESULTS / "divergence_keys.jsonl", [k.as_record() for k in keys])
     jsonl.write(RESULTS / "divergence_sources.jsonl", [s.as_record() for s in sources])

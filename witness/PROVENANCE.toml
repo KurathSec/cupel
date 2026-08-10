@@ -1,0 +1,63 @@
+# Where each witness file comes from.
+#
+# This project's rule is that a number does not exist until a committed script
+# regenerates it from committed data. Artifact evaluation found that two of the
+# three files in this directory are read by bin/regen.py and by control WIT-1
+# but written by no committed script, and that those two carry the paper's
+# defence against the equivalent-mutant objection. The rule was broken exactly
+# where it mattered most.
+#
+# The honest response is not to quietly add a generator that reproduces numbers
+# already published. It is to say, per file, what produced it, and to make an
+# undeclared witness file fail a control. Where the generator does not exist
+# yet, this file says so rather than leaving a reader to assume it does.
+
+schema = "provenance/1"
+
+[[file]]
+name       = "direct.jsonl"
+origin     = "script"
+command    = "python -m cupel witness --release all"
+note       = """
+Fully regenerable. Constructs a candidate witness per clause per parameter set
+by perturbing a valid case, then scores each against the full predicate battery.
+"""
+
+[[file]]
+name       = "validated.jsonl"
+origin     = "recorded"
+command    = ""
+note       = """
+NOT REGENERABLE BY A COMMITTED SCRIPT. Each row records what happened when a
+candidate from direct.jsonl was fed to the vendored target library: whether the
+library rejected it, refused to represent it, or accepted it. Producing these
+rows requires building each target and driving it case by case, which this
+repository does not yet do. The rows were recorded by hand from such a run.
+
+What this means for the numbers derived from it, which are the four-state
+realisability counts: they are a record of a run that happened, and they are not
+reproducible from this repository alone. Read them at that grade. The clause,
+parameter set and method fields of every row do join to direct.jsonl, and
+control WIT-2 checks that, so the rows cannot drift into naming a witness that
+was never constructed.
+"""
+
+[[file]]
+name       = "fips204.alg08.z-inf-norm.jsonl"
+origin     = "recorded"
+command    = ""
+note       = """
+NOT REGENERABLE BY A COMMITTED SCRIPT. The single non-equivalence witness. The
+mutation that produced it IS committed, at
+data/mutations/mldsa-native/witness.z-inf-norm-producer.toml, and its anchor is
+checked by MUT-1 on every run, so the recipe is committed even though the
+running of it is not. Reproducing the row means applying that mutation to the
+pinned target, building it, signing until an oversized z appears, and replaying
+the result through both the pristine and the mutated verifier.
+
+The recorded values, max|z| = 131009 against a bound of 130994 with the pristine
+verifier rejecting and the mutant accepting, were independently confirmed during
+artifact evaluation by decoding the committed signature and by linking a
+separate harness against the built library. That is corroboration by a third
+party, which is worth something, and it is still not a committed script.
+"""

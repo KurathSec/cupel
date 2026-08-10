@@ -174,7 +174,60 @@ files = [
 # ---------------------------------------------------------------------------
 # Substrates.
 # ---------------------------------------------------------------------------
+
+# The two mutation targets. These were absent from this file, which opens by
+# claiming to be the single source of truth for every upstream commit this
+# project depends on. Their commits lived only inside individual mutation
+# records and their repository names only in src/cupel/targets/native.py, so a
+# reader following this file could not obtain the substrates, control MUT-1
+# skipped, and both `cupel clauses sites` and `cupel measure` refused with no
+# instructions. Found by artifact evaluation.
+#
+# Obtain them with:  python -m cupel targets clone
+[targets.mlkem-native]
+repo = "pq-code-package/mlkem-native"
+commit = "c4f993c3f1d20b77a7c3f0144c7ffaadc9943b0d"
+language = "c"
+build_system = "make"
+algorithms = ["ML-KEM"]
+lineage = "pq-code-package"
+note = """
+Production C90 implementation of FIPS 203, formally verified in part with CBMC.
+Mutation substrate for the ML-KEM arm. Cloned into vendor/, which is gitignored:
+the tree is reproducible from this commit and nothing about it is committed here
+except the hash it must have.
+"""
+
+[targets.mldsa-native]
+repo = "pq-code-package/mldsa-native"
+commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+language = "c"
+build_system = "make"
+algorithms = ["ML-DSA"]
+lineage = "pq-code-package"
+note = """
+Production C90 implementation of FIPS 204, sibling of the above and sharing its
+build conventions. Mutation substrate for the ML-DSA arm, and the source of both
+the verifier-side z-norm mutant and the producer-side mutant that built the
+non-equivalence witness.
+
+The two z-norm call sites are distinct and it matters which is which: the
+verifier's guard is mld_polyvecl_chknorm(z, GAMMA1 - BETA) inside the verify
+path, and the signer's rejection-sampling guard is mld_poly_chknorm(z, GAMMA1 -
+BETA). Different function, different site. The mutation records anchor on the
+exact text of each.
+
+SAME LINEAGE as mlkem-native. Two targets are not two lineages, and no survival
+in this project rests on independent implementations.
+"""
+
+# NOT WIRED UP. Pinned as a candidate second lineage and never built out, so no
+# result in this repository comes from it. It is retained rather than deleted
+# because the pin records what a second lineage would have to be, and deleting
+# it would erase the fact that the design asks for one and does not have it.
+# Marked here so a reader does not infer from its presence that it ran.
 [targets.py-acvp-pqc]
+wired_up = false
 repo = "mjosaarinen/py-acvp-pqc"
 commit = "1c859956c0217b04fa5ae76e338e5570aba622c5"
 committed = "2025-06-13T19:28:13Z"

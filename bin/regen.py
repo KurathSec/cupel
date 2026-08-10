@@ -170,8 +170,15 @@ def section_disposition() -> dict:
         print(f"  enum members: {NA} (enums not yet parsed)")
         return {"defined": False}
     planned = [r for r in rows if r.get("planned_but_absent")]
-    print(count("  enum members across all disposition types", len(rows)))
-    print(count("  members flagged planned_but_absent by upstream comment", len(planned)))
+    declared = [r for r in rows if not r.get("planned_but_absent")]
+    # These two counts must stay apart. The three TODO names are NOT enum
+    # members: MLDSASignatureDisposition declares exactly five, and the names
+    # occur only in a leading comment. Adding them to the member count turns 18
+    # into 21 and misdescribes the source, which is a claim about someone else's
+    # code and has to be exact.
+    print(count("  declared enum members across all disposition types", len(declared)))
+    print(count("  further names appearing only in an upstream TODO comment, "
+                "not declared as members", len(planned)))
     for r in sorted(planned, key=lambda r: r.get("name", "")):
         print(f"      {r.get('enum')}::{r.get('name')}  {r.get('note', '')}")
 
@@ -586,6 +593,21 @@ def section_divergence() -> dict:
                 len(unchanged)))
     for p in unchanged:
         print(f"      {p.split('/')[-1]}  {sorted(by_path[p])[0]}")
+
+    # How near the corpus gets to a bound it never crosses. An empty column does
+    # not distinguish vectors that were aimed at the bound and missed from
+    # vectors that were never aimed at it, and the two are different findings.
+    margins = _rows(RESULTS / "z_margins.jsonl")
+    if margins:
+        print()
+        print("  Largest |z| in the cases labelled for a large z norm")
+        print(f"  {'release':12s} {'param set':12s} {'peak |z|':>10s} {'bound':>8s} "
+              f"{'closest':>8s} {'violating':>10s}")
+        for r in sorted(margins, key=lambda r: (r["release"], r["param_set"])):
+            print(f"  {r['release']:12s} {r['param_set']:12s} {r['max_abs_z_max']:10d} "
+                  f"{r['bound']:8d} {r['closest_margin']:8d} {r['n_violating']:10d}")
+        tight = min(r["closest_margin"] for r in margins)
+        print(f"  closest any case comes to the bound, over all pins: {tight}")
 
     shapes = {(tuple(r["length_deltas"]), tuple(r["out_of_range_counts"])) for r in rows}
     print(count("  distinct shapes the invalid keys take across those releases",
