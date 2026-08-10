@@ -27,12 +27,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..predicates import mldsa as mldsa_predicates
+from ..predicates import slhdsa as slhdsa_predicates
 from ..predicates import mlkem as mlkem_predicates
 from ..util.na import Rate
 
 BATTERIES = {
     "ML-KEM": mlkem_predicates.PREDICATES,
     "ML-DSA": mldsa_predicates.PREDICATES,
+    "SLH-DSA": slhdsa_predicates.PREDICATES,
 }
 
 

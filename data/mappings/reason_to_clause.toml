@@ -109,32 +109,36 @@ is_valid = true
 [[label]]
 reason = "invalid signature - too large"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.sig-length"
+clause = "fips205.alg20.sig-length"
 
 [[label]]
 reason = "invalid signature - too small"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.sig-length"
+clause = "fips205.alg20.sig-length"
 
+# Four of the six SLH-DSA negative labels name the same clause. Verification has
+# almost nothing separately checkable beyond the length: a modified message, R,
+# SIGFORS or SIGHT is caught by recomputing the root and comparing, and by
+# nothing else. Label diversity is not clause diversity.
 [[label]]
 reason = "modified signature - R"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.root-compare"
+clause = "fips205.alg20.root-compare"
 
 [[label]]
 reason = "modified signature - SIGFORS"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.root-compare"
+clause = "fips205.alg20.root-compare"
 
 [[label]]
 reason = "modified signature - SIGHT"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.root-compare"
+clause = "fips205.alg20.root-compare"
 
 [[label]]
 reason = "modified message"
 algorithm = "SLH-DSA"
-clause = "fips205.s10.root-compare"
+clause = "fips205.alg20.root-compare"
 
 [[label]]
 reason = "valid signature and message - signature should verify successfully"
