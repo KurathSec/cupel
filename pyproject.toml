@@ -39,6 +39,9 @@ packages = ["src/cupel"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# vendor/ holds cloned upstream trees with their own test suites. Collecting
+# them would run someone else's tests and report the result as ours.
+norecursedirs = ["vendor", ".git", "build", "dist"]
 
 [tool.ruff]
 line-length = 100

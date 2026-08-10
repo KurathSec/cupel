@@ -1,0 +1,41 @@
+schema = "mutation/1"
+mutation_id = "mldsa-native:fips204.alg08.z-inf-norm:producer"
+clause_id = "fips204.alg08.z-inf-norm"
+target = "mldsa-native"
+target_commit = "41c00dac3f3ce4f578f16aee9f9cd25e6bc05add"
+state = "located"
+class = "dual_producer"
+intent = "Make the SIGNER stop rejecting oversized z, so it emits signatures that violate exactly this clause and nothing else."
+kill_mode = "witness_generator"
+
+# The dual of the verifier-side mutant. A surviving mutant with no witness is
+# indistinguishable from an equivalent mutant, which is the standard objection to
+# mutation adequacy. Rather than argue, construct the input: strip this bound
+# from the signing loop's rejection sampling and the signer emits, as a matter of
+# course, signatures whose z exceeds gamma1 - beta while c-tilde is correct and
+# the hint is well formed. The unmutated verifier rejects it, the verifier-side
+# mutant accepts it, and the difference is a witness rather than an argument.
+#
+# Only the z bound is removed. The w0 and ct0 bounds at lines 856 and 873 stay,
+# so the emitted signature violates one clause and no other.
+[[edit]]
+path = "mldsa/src/sign.c"
+anchor = """
+    z_invalid = mld_poly_chknorm(z, MLDSA_GAMMA1 - MLDSA_BETA);
+"""
+# mld_poly_chknorm is declared warn_unused_result, so a (void) cast does not
+# silence it under this repository's -Werror. The result is therefore still
+# consumed, and the verdict overridden on the next line.
+replacement = """
+    z_invalid = mld_poly_chknorm(z, MLDSA_GAMMA1 - MLDSA_BETA);
+    z_invalid = 0;
+"""
+occurrences = 1
+
+[postcondition]
+positive_vectors_must_pass = false
+prediction = """
+Emits signatures with ||z||inf >= gamma1 - beta. Rejection sampling normally
+discards these, so removing the bound should surface them within a few dozen
+signatures. Registered before the run.
+"""
