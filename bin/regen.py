@@ -85,26 +85,33 @@ def section_corpus() -> dict:
         print(f"  negative cases:     {NA}")
         return {"defined": False}
 
-    total_cases = sum(r["n_cases"] for r in rows)
-    total_neg = sum(r["n_negative"] for r in rows)
-    print(f"  {'directory':38s} {'groups':>7s} {'cases':>7s} {'negative':>9s}")
-    for r in sorted(rows, key=lambda r: r["dir"]):
-        print(f"  {r['dir']:38s} {r['n_groups']:>7d} {r['n_cases']:>7d} {r['n_negative']:>9d}")
-    print()
-    print(count("  vector directories", len(rows)))
-    print(Rate(total_neg, total_cases, "  negative case share").render())
+    # Per release. Stacking three pinned states into one table would list every
+    # directory three times and invite a reader to sum across them.
+    by_release: dict[str, list[dict]] = {}
+    for r in rows:
+        by_release.setdefault(r.get("release", "?"), []).append(r)
 
-    modes_without_negatives = [r["dir"] for r in rows if r["n_negative"] == 0]
-    print(count("  directories with zero negative cases", len(modes_without_negatives)))
-    for d in sorted(modes_without_negatives):
-        print(f"      {d}")
-    return {
-        "defined": True,
-        "n_dirs": len(rows),
-        "n_cases": total_cases,
-        "n_negative": total_neg,
-        "n_dirs_without_negatives": len(modes_without_negatives),
-    }
+    per_release = {}
+    for release in sorted(by_release):
+        rs = by_release[release]
+        total_cases = sum(r["n_cases"] for r in rs)
+        total_neg = sum(r["n_negative"] for r in rs)
+        print(f"\n  {release}")
+        print(f"    {'directory':38s} {'groups':>7s} {'cases':>7s} {'negative':>9s}")
+        for r in sorted(rs, key=lambda r: r["dir"]):
+            print(f"    {r['dir']:38s} {r['n_groups']:>7d} {r['n_cases']:>7d} "
+                  f"{r['n_negative']:>9d}")
+        print("    " + count("vector directories", len(rs)))
+        print("    " + Rate(total_neg, total_cases, "negative case share").render())
+        no_neg = sorted(r["dir"] for r in rs if r["n_negative"] == 0)
+        print("    " + count("directories with zero negative cases", len(no_neg)))
+        for d in no_neg:
+            print(f"        {d}")
+        per_release[release] = {
+            "n_dirs": len(rs), "n_cases": total_cases, "n_negative": total_neg,
+            "n_dirs_without_negatives": len(no_neg),
+        }
+    return {"defined": True, "n_releases": len(by_release), "per_release": per_release}
 
 
 def section_reasons() -> dict:
