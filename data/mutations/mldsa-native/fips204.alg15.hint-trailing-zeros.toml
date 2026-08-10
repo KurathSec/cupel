@@ -25,3 +25,19 @@ prediction = """
 DIES. The matrix reports 20 isolated violations at r2026-07-31. Registered
 before the run.
 """
+
+# The prediction above is left exactly as registered. It was wrong, and editing
+# it after the fact would destroy the only thing that makes it a prediction.
+outcome = "SURVIVED"
+outcome_note = """
+The prediction failed and the failure is the finding. "Isolated" means isolated
+among the clauses the battery MODELS, and the FIPS 204 commitment hash is
+deliberately not modelled. That check is a universal backstop for signature
+verification: any perturbation of a signature changes w1 and therefore c-tilde,
+so these cases are still rejected with the trailing-zeros check removed. It only
+moves where they are rejected.
+
+So a COVERED column predicts death only conditionally, while an ABSENT column
+predicts survival soundly. See the note at the top of
+src/cupel/analysis/violation_matrix.py.
+"""

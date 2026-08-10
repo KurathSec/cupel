@@ -138,6 +138,42 @@ def _wit1():
     return bad == 0, f"{bad} of {checked} witnesses disagree with their own record"
 
 
+@control("PRED-1", "every registered prediction matches its recorded verdict")
+def _pred1():
+    """A prediction registered before a run is the only thing that makes the run
+    a test rather than an observation. When one fails, the mutation record must
+    say so in an `outcome` field: the prediction itself is never edited, because
+    editing it after the fact destroys what made it a prediction."""
+    import tomllib
+
+    verd = {}
+    for r in jsonl.read(RESULTS / "verdicts.jsonl"):
+        if r.get("release"):
+            verd.setdefault(r["clause_id"], {})[r["release"]] = \
+                r.get("exercised", {}).get("verdict")
+    checked = unacknowledged = 0
+    for f in sorted((DATA / "mutations").rglob("*.toml")):
+        rec = tomllib.loads(f.read_text(encoding="utf-8"))
+        post = rec.get("postcondition", {})
+        pred = (post.get("prediction") or "").strip().split(".")[0].upper()
+        if not pred or rec.get("class") == "dual_producer":
+            continue
+        got = verd.get(rec["clause_id"])
+        if not got:
+            continue
+        checked += 1
+        expected = "KILLED" if pred.startswith("DIES") else \
+                   "SURVIVED" if pred.startswith("SURVIVES") else None
+        actual = got[sorted(got)[-1]]
+        if expected and expected != actual and not post.get("outcome"):
+            unacknowledged += 1
+    if not checked:
+        return None, "no predictions with recorded verdicts"
+    return unacknowledged == 0, (
+        f"{checked} predictions checked, {unacknowledged} failed without an "
+        "outcome field acknowledging it")
+
+
 @control("NA-1", "an empty aggregation prints NA rather than 0")
 def _na1():
     from cupel.util.na import NA, Rate as R, mean
