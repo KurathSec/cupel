@@ -1,0 +1,287 @@
+# Fetched upstream files, by pinned release. Generated, do not hand-edit.
+#
+# Blobs themselves are never committed. This file plus data/pins.toml
+# reproduces them, and the recorded hash proves what was run even if
+# upstream force-pushes or edits a file in place.
+#
+# Regenerate with:  python -m cupel vectors fetch
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-DSA-keyGen-FIPS204/internalProjection.json"
+sha256      = "sha256:e67ee6540d40e11506c3c4e3b1f79fc1cefcd49820db99fc61f87cc8ba463baf"
+bytes       = 882437
+fetched_utc = "2026-08-10T03:06:13Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204-tr1/internalProjection.json"
+sha256      = "sha256:b61576c765b1eb0e6a667a67a68380df944592be8740f9c020c9ea5a89136f18"
+bytes       = 17939006
+fetched_utc = "2026-08-10T03:06:19Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204/internalProjection.json"
+sha256      = "sha256:72dcaf5f69853ca267ccd16af9cb40949786aca0fcfbf05d1ebeba132b93af22"
+bytes       = 8971659
+fetched_utc = "2026-08-10T03:06:15Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-DSA-sigVer-FIPS204/internalProjection.json"
+sha256      = "sha256:a41362abd3391b4858cf5d04556b6662881b0ac90eebf886c5c7271b0baf69d5"
+bytes       = 4498843
+fetched_utc = "2026-08-10T03:06:21Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/internalProjection.json"
+sha256      = "sha256:011c130c4baa6e24b880527a348d1824c0445334b41e55df8d89172ea655ff4f"
+bytes       = 1780191
+fetched_utc = "2026-08-10T03:06:11Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203/internalProjection.json"
+sha256      = "sha256:8fe8b0ade31d8f5754e909599574eb9f2d60932d95a39bc479b2b48e38f65916"
+bytes       = 1478114
+fetched_utc = "2026-08-10T03:06:10Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/internalProjection.json"
+sha256      = "sha256:d7a62a2c3476957f56dd8d24f9004ea6776ccfe995ffe71a65bb9506dc9c7b1b"
+bytes       = 558841
+fetched_utc = "2026-08-10T03:06:09Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/SLH-DSA-keyGen-FIPS205/internalProjection.json"
+sha256      = "sha256:d7c53a1b6450087047b57aae83a5a51a0ac89ecdb23ebe071e83fbb69ae9d920"
+bytes       = 75294
+fetched_utc = "2026-08-10T03:06:22Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/SLH-DSA-sigGen-FIPS205/internalProjection.json"
+sha256      = "sha256:62b42e7c27fda5de8a94aba2943ae413b59b6ea08141f3bc035b1eceae235dba"
+bytes       = 38178342
+fetched_utc = "2026-08-10T03:06:30Z"
+
+[[entry]]
+release     = "r2026-07-24"
+commit      = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+path        = "gen-val/json-files/SLH-DSA-sigVer-FIPS205/internalProjection.json"
+sha256      = "sha256:a013fc2104f4ed4799d96d51141f65b965969b2cf10646626a021b6d456ce792"
+bytes       = 30731848
+fetched_utc = "2026-08-10T03:06:36Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-DSA-keyGen-FIPS204/internalProjection.json"
+sha256      = "sha256:e67ee6540d40e11506c3c4e3b1f79fc1cefcd49820db99fc61f87cc8ba463baf"
+bytes       = 882437
+fetched_utc = "2026-08-10T03:06:38Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204-tr1/internalProjection.json"
+sha256      = "sha256:b61576c765b1eb0e6a667a67a68380df944592be8740f9c020c9ea5a89136f18"
+bytes       = 17939006
+fetched_utc = "2026-08-10T03:06:44Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204/internalProjection.json"
+sha256      = "sha256:72dcaf5f69853ca267ccd16af9cb40949786aca0fcfbf05d1ebeba132b93af22"
+bytes       = 8971659
+fetched_utc = "2026-08-10T03:06:41Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-DSA-sigVer-FIPS204/internalProjection.json"
+sha256      = "sha256:a41362abd3391b4858cf5d04556b6662881b0ac90eebf886c5c7271b0baf69d5"
+bytes       = 4498843
+fetched_utc = "2026-08-10T03:06:46Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/internalProjection.json"
+sha256      = "sha256:5e88fbd351dc2915b2ab399f5dffd269e1cdbdd0186103ab0e90b374cf592187"
+bytes       = 1767711
+fetched_utc = "2026-08-10T03:06:38Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203/internalProjection.json"
+sha256      = "sha256:a556952ce869bb89c3a3196a701dad89647c193a34c86eafb61a9d710d5b810f"
+bytes       = 1465634
+fetched_utc = "2026-08-10T03:06:37Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/internalProjection.json"
+sha256      = "sha256:d7a62a2c3476957f56dd8d24f9004ea6776ccfe995ffe71a65bb9506dc9c7b1b"
+bytes       = 558841
+fetched_utc = "2026-08-10T03:06:37Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/SLH-DSA-keyGen-FIPS205/internalProjection.json"
+sha256      = "sha256:d7c53a1b6450087047b57aae83a5a51a0ac89ecdb23ebe071e83fbb69ae9d920"
+bytes       = 75294
+fetched_utc = "2026-08-10T03:06:46Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/SLH-DSA-sigGen-FIPS205/internalProjection.json"
+sha256      = "sha256:62b42e7c27fda5de8a94aba2943ae413b59b6ea08141f3bc035b1eceae235dba"
+bytes       = 38178342
+fetched_utc = "2026-08-10T03:06:54Z"
+
+[[entry]]
+release     = "r2026-07-28"
+commit      = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+path        = "gen-val/json-files/SLH-DSA-sigVer-FIPS205/internalProjection.json"
+sha256      = "sha256:a013fc2104f4ed4799d96d51141f65b965969b2cf10646626a021b6d456ce792"
+bytes       = 30731848
+fetched_utc = "2026-08-10T03:07:04Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-DSA-keyGen-FIPS204/internalProjection.json"
+sha256      = "sha256:e67ee6540d40e11506c3c4e3b1f79fc1cefcd49820db99fc61f87cc8ba463baf"
+bytes       = 882437
+fetched_utc = "2026-08-10T03:04:48Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204-tr1/internalProjection.json"
+sha256      = "sha256:b61576c765b1eb0e6a667a67a68380df944592be8740f9c020c9ea5a89136f18"
+bytes       = 17939006
+fetched_utc = "2026-08-10T03:04:56Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-DSA-sigGen-FIPS204/internalProjection.json"
+sha256      = "sha256:72dcaf5f69853ca267ccd16af9cb40949786aca0fcfbf05d1ebeba132b93af22"
+bytes       = 8971659
+fetched_utc = "2026-08-10T03:04:51Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-DSA-sigVer-FIPS204/internalProjection.json"
+sha256      = "sha256:47cdd6314c7f746d02421ffcba89d4dbc7bb875ac49e07a029fdfc26fba55437"
+bytes       = 4533178
+fetched_utc = "2026-08-10T03:04:57Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203-tr1/internalProjection.json"
+sha256      = "sha256:5e88fbd351dc2915b2ab399f5dffd269e1cdbdd0186103ab0e90b374cf592187"
+bytes       = 1767711
+fetched_utc = "2026-08-10T03:04:11Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-KEM-encapDecap-FIPS203/internalProjection.json"
+sha256      = "sha256:a556952ce869bb89c3a3196a701dad89647c193a34c86eafb61a9d710d5b810f"
+bytes       = 1465634
+fetched_utc = "2026-08-10T03:04:10Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/ML-KEM-keyGen-FIPS203/internalProjection.json"
+sha256      = "sha256:d7a62a2c3476957f56dd8d24f9004ea6776ccfe995ffe71a65bb9506dc9c7b1b"
+bytes       = 558841
+fetched_utc = "2026-08-10T03:04:09Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/SLH-DSA-keyGen-FIPS205/internalProjection.json"
+sha256      = "sha256:d7c53a1b6450087047b57aae83a5a51a0ac89ecdb23ebe071e83fbb69ae9d920"
+bytes       = 75294
+fetched_utc = "2026-08-10T03:04:57Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/SLH-DSA-sigGen-FIPS205/internalProjection.json"
+sha256      = "sha256:62b42e7c27fda5de8a94aba2943ae413b59b6ea08141f3bc035b1eceae235dba"
+bytes       = 38178342
+fetched_utc = "2026-08-10T03:05:10Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/json-files/SLH-DSA-sigVer-FIPS205/internalProjection.json"
+sha256      = "sha256:a013fc2104f4ed4799d96d51141f65b965969b2cf10646626a021b6d456ce792"
+bytes       = 30731848
+fetched_utc = "2026-08-10T03:05:17Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes/MLDSASignatureDisposition.cs"
+sha256      = "sha256:64c8861247891b7326a44947bd9be99e905e7295594cebf2cd3904c4fc6dfb7b"
+bytes       = 667
+fetched_utc = "2026-08-10T03:15:54Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes/MLKEMDecapsulationDisposition.cs"
+sha256      = "sha256:cb2be0cb555de0b08ccd7c7dd6b11afbdb2fa5f0c77a0db9bec71f5c1e666650"
+bytes       = 292
+fetched_utc = "2026-08-10T03:15:55Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes/MLKEMDecapsulationKeyDisposition.cs"
+sha256      = "sha256:b7b8b6486913c787b6acd1b6ab629ad114afd590f82986d7b49f05ffff9d859a"
+bytes       = 281
+fetched_utc = "2026-08-10T03:15:55Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes/MLKEMEncapsulationKeyDisposition.cs"
+sha256      = "sha256:1906558a40b1d442f8735db27ca383fb8122a73dddf375120ec201e23b637f0b"
+bytes       = 315
+fetched_utc = "2026-08-10T03:15:56Z"
+
+[[entry]]
+release     = "r2026-07-31"
+commit      = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+path        = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes/SLHDSASignatureDisposition.cs"
+sha256      = "sha256:fa1550fa1e3438bbf69eda6b1cd99bc45299e7bde94773666af2261a9ce55ed6"
+bytes       = 765
+fetched_utc = "2026-08-10T03:15:56Z"

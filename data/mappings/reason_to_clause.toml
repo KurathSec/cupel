@@ -1,0 +1,143 @@
+# What each negative vector label claims to test.
+#
+# NIST labels every negative case with a `reason` string serialised from a C#
+# disposition enum. The label is a claim: this case exists to exercise that
+# check. This file records what clause each claim names, so the claim can be
+# tested against what the case actually violates.
+#
+# A case whose label names a clause the case does not violate is misattributed:
+# it cannot fail for the reason it says. That is not a hypothetical failure
+# mode. It is ACVP-Server #462, and it is what this mapping mechanises.
+#
+# `clause` is the clause the label names. `also_permitted` lists clauses whose
+# violation is an acceptable alternative realisation of the same label, so that
+# a defensible generator choice is not reported as a defect.
+
+# ---------------------------------------------------------------------------
+# ML-KEM
+# ---------------------------------------------------------------------------
+
+[[label]]
+reason = "noisy linear system values too large"
+algorithm = "ML-KEM"
+clause = "fips203.s7.2.ek-modulus"
+note = "The encapsulation key modulus check. The label describes coefficients at or above q."
+
+[[label]]
+reason = "modified H"
+algorithm = "ML-KEM"
+clause = "fips203.s7.3.dk-hash"
+note = "The decapsulation key hash check."
+
+[[label]]
+reason = "modified ciphertext"
+algorithm = "ML-KEM"
+clause = ""
+expects_rejection = false
+note = """
+Not a rejection case. ML-KEM decapsulation of a modified ciphertext must return
+the implicit-rejection shared secret rather than an error, which is why these
+cases carry no testPassed. Excluded from the misattribution join by design, and
+recorded here so the exclusion is visible rather than silent.
+"""
+
+[[label]]
+reason = "valid decapsulation"
+algorithm = "ML-KEM"
+clause = ""
+is_valid = true
+
+[[label]]
+reason = "valid encapsulation key"
+algorithm = "ML-KEM"
+clause = ""
+is_valid = true
+
+[[label]]
+reason = "valid decapsulation key"
+algorithm = "ML-KEM"
+clause = ""
+is_valid = true
+
+# ---------------------------------------------------------------------------
+# ML-DSA
+# ---------------------------------------------------------------------------
+
+[[label]]
+reason = "modified signature - z"
+algorithm = "ML-DSA"
+clause = "fips204.alg08.z-inf-norm"
+note = """
+The label names the z infinity-norm bound. Two independent reporters have
+observed that removing that bound from a verifier does not cause any ACVP
+vector to fail, so the prediction registered before measurement is that these
+cases violate the commitment-hash clause instead.
+"""
+
+[[label]]
+reason = "modified signature - hint"
+algorithm = "ML-DSA"
+clause = "fips204.alg15.hint-decode"
+also_permitted = [
+  "fips204.alg15.hint-weight",
+  "fips204.alg15.hint-ordering",
+  "fips204.alg15.hint-trailing-zeros",
+]
+note = "HintBitUnpack decomposes into three separable sub-clauses; violating any one realises the label."
+
+[[label]]
+reason = "modified signature - commitment"
+algorithm = "ML-DSA"
+clause = "fips204.alg08.commitment-hash"
+
+[[label]]
+reason = "modified message"
+algorithm = "ML-DSA"
+clause = "fips204.alg08.commitment-hash"
+note = "A modified message cannot be detected other than through the commitment hash comparison."
+
+[[label]]
+reason = "valid signature and message - signature should verify successfully"
+algorithm = "ML-DSA"
+clause = ""
+is_valid = true
+
+# ---------------------------------------------------------------------------
+# SLH-DSA
+# ---------------------------------------------------------------------------
+
+[[label]]
+reason = "invalid signature - too large"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.sig-length"
+
+[[label]]
+reason = "invalid signature - too small"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.sig-length"
+
+[[label]]
+reason = "modified signature - R"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.root-compare"
+
+[[label]]
+reason = "modified signature - SIGFORS"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.root-compare"
+
+[[label]]
+reason = "modified signature - SIGHT"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.root-compare"
+
+[[label]]
+reason = "modified message"
+algorithm = "SLH-DSA"
+clause = "fips205.s10.root-compare"
+
+[[label]]
+reason = "valid signature and message - signature should verify successfully"
+algorithm = "SLH-DSA"
+clause = ""
+is_valid = true

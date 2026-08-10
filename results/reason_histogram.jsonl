@@ -1,0 +1,72 @@
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified ciphertext","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":30,"reason":"modified ciphertext","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":30,"reason":"valid decapsulation","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified message","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - commitment","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - hint","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - z","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":true,"mode":"sigVer","n":36,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too large","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too small","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified message","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - R","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGFORS","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGHT","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":true,"mode":"sigVer","n":72,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-24","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified ciphertext","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":30,"reason":"modified ciphertext","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":30,"reason":"valid decapsulation","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified message","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - commitment","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - hint","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - z","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":true,"mode":"sigVer","n":36,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too large","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too small","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified message","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - R","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGFORS","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGHT","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":true,"mode":"sigVer","n":72,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-28","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified ciphertext","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"modified H","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":30,"reason":"modified ciphertext","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":false,"mode":"encapDecap","n":15,"reason":"noisy linear system values too large","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":30,"reason":"valid decapsulation","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid decapsulation key","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-KEM","dir":"ML-KEM-encapDecap-FIPS203-tr1","is_valid_label":true,"mode":"encapDecap","n":15,"reason":"valid encapsulation key","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified message","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - commitment","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - hint","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":false,"mode":"sigVer","n":36,"reason":"modified signature - z","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"ML-DSA","dir":"ML-DSA-sigVer-FIPS204","is_valid_label":true,"mode":"sigVer","n":36,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too large","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"invalid signature - too small","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified message","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - R","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGFORS","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":false,"mode":"sigVer","n":72,"reason":"modified signature - SIGHT","release":"r2026-07-31","schema":"reason/1"}
+{"algorithm":"SLH-DSA","dir":"SLH-DSA-sigVer-FIPS205","is_valid_label":true,"mode":"sigVer","n":72,"reason":"valid signature and message - signature should verify successfully","release":"r2026-07-31","schema":"reason/1"}

@@ -114,17 +114,34 @@ def section_reasons() -> dict:
     if not rows:
         print(f"  distinct reason labels: {NA} (census not yet run)")
         return {"defined": False}
-    by_algo: dict[str, list[dict]] = {}
+    # Keyed on directory, not algorithm: ML-KEM ships two encapDecap vector sets
+    # and the tr1 one carries key-check groups the other does not. Folding them
+    # together would double-count and would hide exactly the difference that
+    # matters.
+    by_dir: dict[str, list[dict]] = {}
     for r in rows:
-        by_algo.setdefault(r["algorithm"], []).append(r)
-    for algo in sorted(by_algo):
-        print(f"  {algo}")
-        for r in sorted(by_algo[algo], key=lambda r: (-r["n"], r["reason"])):
-            print(f"      {r['n']:>5d}  {r['reason']}")
-    n_labels = len({(r["algorithm"], r["reason"]) for r in rows})
+        by_dir.setdefault(r["dir"], []).append(r)
+    for vdir in sorted(by_dir):
+        rs = by_dir[vdir]
+        n_neg = sum(r["n"] for r in rs if not r["is_valid_label"])
+        print(f"  {vdir}  ({len(rs)} labels, {n_neg} negative cases)")
+        for r in sorted(rs, key=lambda r: (r["is_valid_label"], -r["n"], r["reason"])):
+            mark = " " if r["is_valid_label"] else "-"
+            print(f"    {mark} {r['n']:>5d}  {r['reason']}")
+
+    n_pairs = len({(r["dir"], r["reason"]) for r in rows})
+    n_distinct_by_algo = {}
+    for r in rows:
+        n_distinct_by_algo.setdefault(r["algorithm"], set()).add(r["reason"])
     print()
-    print(count("  distinct (algorithm, reason) pairs", n_labels))
-    return {"defined": True, "n_labels": n_labels}
+    print(count("  distinct (directory, reason) pairs", n_pairs))
+    for algo in sorted(n_distinct_by_algo):
+        print(count(f"    distinct labels for {algo}", len(n_distinct_by_algo[algo])))
+    return {
+        "defined": True,
+        "n_pairs": n_pairs,
+        "n_distinct_by_algo": {k: len(v) for k, v in n_distinct_by_algo.items()},
+    }
 
 
 def section_disposition() -> dict:
@@ -240,18 +257,40 @@ def section_misattribution() -> dict:
         print(f"  negative cases checked: {NA} (violation matrix not yet built)")
         print(f"  misattributed:          {NA}")
         return {"defined": False}
-    misattributed = [r for r in rows if r.get("misattributed")]
-    print(Rate(len(misattributed), len(rows), "  misattribution rate").render())
-    by_reason: dict[str, list[dict]] = {}
-    for r in misattributed:
-        by_reason.setdefault(r["reason"], []).append(r)
-    for reason in sorted(by_reason):
-        n_total = sum(1 for r in rows if r["reason"] == reason)
-        print(Rate(len(by_reason[reason]), n_total, f"    {reason}").render())
+    # Per release, never pooled. These releases are consecutive states across a
+    # corrective commit, so a pooled rate averages a pre-fix corpus with a
+    # post-fix one and describes neither.
+    scored = [r for r in rows if r.get("status") in ("attributed", "misattributed")]
+    if not scored:
+        print(f"  scored negative cases: {NA} (no label had an evaluable predicate)")
+        skipped = len(rows)
+        print(count("  not scored (no predicate or unmapped label)", skipped))
+        return {"defined": False, "n_scored": 0}
+
+    by_release: dict[str, list[dict]] = {}
+    for r in scored:
+        by_release.setdefault(r.get("release", "?"), []).append(r)
+
+    per_release = {}
+    for release in sorted(by_release):
+        rs = by_release[release]
+        bad = [r for r in rs if r.get("misattributed")]
+        print(Rate(len(bad), len(rs), f"  {release}").render())
+        by_reason: dict[str, int] = {}
+        for r in bad:
+            by_reason[r["reason"]] = by_reason.get(r["reason"], 0) + 1
+        for reason in sorted(by_reason):
+            n_total = sum(1 for r in rs if r["reason"] == reason)
+            print(Rate(by_reason[reason], n_total, f"      {reason}").render())
+        per_release[release] = {"n_scored": len(rs), "n_misattributed": len(bad)}
+
+    n_skipped = len(rows) - len(scored)
+    print(count("  not scored (no predicate or unmapped label)", n_skipped))
     return {
         "defined": True,
-        "n_checked": len(rows),
-        "n_misattributed": len(misattributed),
+        "n_scored": len(scored),
+        "n_skipped": n_skipped,
+        "per_release": per_release,
     }
 
 

@@ -1,0 +1,173 @@
+# Every upstream commit this project depends on. One file, one source of truth.
+#
+# No number produced by cupel is interpretable without the pins that produced
+# it, so every generated record embeds the pin it was derived from and a record
+# whose pin disagrees with this file is a hard error rather than a warning.
+#
+# Regenerate the resolved metadata with:  python -m cupel vectors verify
+
+# ---------------------------------------------------------------------------
+# The specification, used to derive the clause denominator (derivation D1).
+# ---------------------------------------------------------------------------
+[cryptol_specs]
+repo = "GaloisInc/cryptol-specs"
+commit = "82023f4bee71e8d6f00e24e926b04e33cf2aacd6"
+committed = "2026-06-11T20:27:01Z"
+license = "BSD-3-Clause"
+note = """
+Executable specifications of FIPS 203 and FIPS 204, both marked gold standard
+upstream. FIPS 205 is absent: the repository carries only pre-standard
+SPHINCS+ v3.1 in legacy Cryptol module syntax, excluded from the docstring CI
+and with a correctness failure documented in its own README. There is no 205
+branch and no 205 pull request. This is why the 205 denominator prints NA.
+Clause extraction parses docstring text only. Cryptol is not required and is
+not installed.
+"""
+
+[[cryptol_specs.files]]
+path = "Primitive/Asymmetric/KEM/ML_KEM/Specification.cry"
+doc = "FIPS-203"
+
+[[cryptol_specs.files]]
+path = "Primitive/Asymmetric/Signature/ML_DSA/Specification.cry"
+doc = "FIPS-204"
+
+[[cryptol_specs.files]]
+path = "Primitive/Asymmetric/Signature/ML_DSA/ML_DSA.cry"
+doc = "FIPS-204"
+
+[[cryptol_specs.files]]
+path = "Primitive/Asymmetric/Signature/ML_DSA/Parameters.cry"
+doc = "FIPS-204"
+
+# ---------------------------------------------------------------------------
+# The validation suite. Three consecutive states, which is what makes the
+# retrospective validation exact rather than approximate.
+#
+#   c924096a  ->  ad33b3d9  ->  a7f283cd
+#   pre #460      #460 fixed    #462 fixed (master tip)
+#                 pre #462
+#
+# ad33b3d9 is the direct parent of a7f283cd, verified through the commit graph.
+# ---------------------------------------------------------------------------
+[acvp_server]
+repo = "usnistgov/ACVP-Server"
+commit = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+note = """
+The committed json-files are sample vector sets. A maintainer has stated that
+the production suite is generated from a NIST-internal database reached through
+IOracle, so every empirical claim here is scoped to the samples. The structural
+bound derived from the disposition enums is what speaks to any generated set.
+"""
+
+[[acvp_server.releases]]
+id = "r2026-07-24"
+commit = "c924096a71e5d050742e31efa6846d1e2d6fb3bd"
+committed = "2026-07-24T20:09:56Z"
+subject = "corrects empty test cases in ML-KEM encapDecap FIPS203 and FIPS203tr1 prompt.json"
+note = "Pre-fix state for issue #460. Invalid ek are 1216/1600/1984 bytes, which is standard + 416, so the length check fires before the modulus check is ever reached."
+
+[[acvp_server.releases]]
+id = "r2026-07-28"
+commit = "ad33b3d9504491767f1aa76382464f3b3fa2359e"
+committed = "2026-07-28T17:29:53Z"
+subject = "corrects ML-KEM encapDecap tests that included `ek` that were longer than intended"
+note = "Fixes #460. Also the pre-fix state for #462: the 36 modified-signature-z cases still flip a bit in the hint block."
+
+[[acvp_server.releases]]
+id = "r2026-07-31"
+commit = "a7f283cdc87d2d6dd93c1bac59e5622c5f9f8324"
+committed = "2026-07-31T17:00:12Z"
+subject = "corrects ML-DSA sigVer FIPS204 sample json files for issue with ModifyZ disposition"
+note = "Fixes #462 and is the current master tip. The predicted result is that the fix moved the flipped bit into z without restoring coverage of the z-norm bound, since the modified signatures are still rejected at the commitment hash. Registered as a prediction before measurement."
+
+# Vector directories in scope. Only internalProjection.json carries the `reason`
+# label, so it is the only file from which case disposition can be read.
+[[acvp_server.vector_dirs]]
+dir = "ML-KEM-keyGen-FIPS203"
+algorithm = "ML-KEM"
+mode = "keyGen"
+
+[[acvp_server.vector_dirs]]
+dir = "ML-KEM-encapDecap-FIPS203"
+algorithm = "ML-KEM"
+mode = "encapDecap"
+
+[[acvp_server.vector_dirs]]
+dir = "ML-KEM-encapDecap-FIPS203-tr1"
+algorithm = "ML-KEM"
+mode = "encapDecap"
+note = "Carries the encapsulationKeyCheck and decapsulationKeyCheck groups absent from the non-tr1 set."
+
+[[acvp_server.vector_dirs]]
+dir = "ML-DSA-keyGen-FIPS204"
+algorithm = "ML-DSA"
+mode = "keyGen"
+
+[[acvp_server.vector_dirs]]
+dir = "ML-DSA-sigGen-FIPS204"
+algorithm = "ML-DSA"
+mode = "sigGen"
+
+[[acvp_server.vector_dirs]]
+dir = "ML-DSA-sigGen-FIPS204-tr1"
+algorithm = "ML-DSA"
+mode = "sigGen"
+
+[[acvp_server.vector_dirs]]
+dir = "ML-DSA-sigVer-FIPS204"
+algorithm = "ML-DSA"
+mode = "sigVer"
+
+[[acvp_server.vector_dirs]]
+dir = "SLH-DSA-keyGen-FIPS205"
+algorithm = "SLH-DSA"
+mode = "keyGen"
+
+[[acvp_server.vector_dirs]]
+dir = "SLH-DSA-sigGen-FIPS205"
+algorithm = "SLH-DSA"
+mode = "sigGen"
+note = "internalProjection.json is 38.2 MB and dominates normalisation cost. Parsed once per pin into the case index."
+
+[[acvp_server.vector_dirs]]
+dir = "SLH-DSA-sigVer-FIPS205"
+algorithm = "SLH-DSA"
+mode = "sigVer"
+
+# The generator's disposition enums. Each member is a failure mode the suite can
+# produce, so the member set bounds negative coverage for any generated vector
+# set rather than only for the committed samples. This is derivation D3.
+[acvp_server.disposition_types]
+base = "gen-val/src/oracle/src/NIST.CVP.ACVTS.Libraries.Oracle.Abstractions/DispositionTypes"
+files = [
+  "MLDSASignatureDisposition.cs",
+  "MLKEMDecapsulationDisposition.cs",
+  "MLKEMDecapsulationKeyDisposition.cs",
+  "MLKEMEncapsulationKeyDisposition.cs",
+  "SLHDSASignatureDisposition.cs",
+]
+
+# ---------------------------------------------------------------------------
+# Substrates.
+# ---------------------------------------------------------------------------
+[targets.py-acvp-pqc]
+repo = "mjosaarinen/py-acvp-pqc"
+commit = "1c859956c0217b04fa5ae76e338e5570aba622c5"
+committed = "2025-06-13T19:28:13Z"
+language = "python"
+build_system = "none"
+algorithms = ["ML-KEM", "ML-DSA", "SLH-DSA"]
+lineage = "independent"
+note = """
+Spec-literal Python written directly from the standards. Zero build, so the
+mutation loop is seconds rather than minutes, and the control flow maps onto
+FIPS algorithm steps. Used as the day-one substrate because the day-one
+measurement is of the vector set, not of an implementation. It is not
+production code and no production-realism claim rests on it.
+
+Caution: this pin is from 2025-06 and predates the vector states above by more
+than a year. The baseline grade must be 100 percent against each pinned release
+before any measurement counts, and a shortfall is a staleness finding about
+this substrate rather than a coverage finding about the suite.
+"""
