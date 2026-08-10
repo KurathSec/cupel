@@ -181,6 +181,47 @@ def cmd_clauses_disposition(args) -> int:
     return 0
 
 
+def cmd_clauses_defs(args) -> int:
+    """Derivation D1b: candidates from definitions rather than from tags."""
+    from ..clauses import derive_defs as d1b
+
+    entries = lockmod.load()
+    pins = pinsmod.load()
+    cs = pins["cryptol_specs"]
+    alld = []
+    print(f"cryptol-specs @ {cs['commit'][:12]}\n")
+    for f in cs["files"]:
+        src = lockmod.ensure_source("cryptol-specs", cs["repo"], cs["commit"],
+                                    f["path"], entries).decode()
+        ds = d1b.extract(src, f["path"])
+        d1b.propose(ds)
+        alld += ds
+        print(f"  {f['path'].split('/')[-1]:22s} {f['doc']}  {len(ds):>3d} definitions")
+    lockmod.save(entries)
+
+    inb = [d for d in alld if d.proposed_surface == "api_boundary_checkable"]
+    untagged = [d for d in inb if not d.tagged]
+    undecided = [d for d in alld if d.proposed_surface is None]
+    print()
+    print("  " + Rate(len(inb), len(alld), "proposed boundary-checkable").render())
+    print("  " + Rate(len(untagged), len(inb), "of those, carrying NO citation").render())
+    print(f"  needing a recorded decision: {len(undecided)}")
+    print()
+    print("  Clauses a tag-based derivation cannot see:")
+    for d in sorted(untagged, key=lambda d: d.name):
+        print(f"    {d.name:34s} {d.proposed_why}")
+    if undecided:
+        print()
+        print("  Undecided, proposed by name shape alone:")
+        for d in undecided:
+            print(f"    {d.name:34s} {d.proposed_why}")
+
+    out = pinsmod.REPO / "data" / "clauses" / "generated" / "candidates.jsonl"
+    jsonl.write(out, [d.as_record() for d in alld])
+    print(f"\nwrote {out.relative_to(pinsmod.REPO)} ({len(alld)} rows)")
+    return 0
+
+
 def cmd_matrix(args) -> int:
     """Build the violation matrix and run the zero-column, masking and
     misattribution joins."""
@@ -348,6 +389,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     clauses = sub.add_parser("clauses", help="derive and reconcile the clause list")
     csub = clauses.add_subparsers(dest="cmd", required=True)
+    p = csub.add_parser("defs", help="derivation D1b: candidates from definitions")
+    p.set_defaults(func=cmd_clauses_defs)
     p = csub.add_parser("disposition", parents=[common],
                         help="derivation D3: parse the generator disposition enums")
     p.set_defaults(func=cmd_clauses_disposition)

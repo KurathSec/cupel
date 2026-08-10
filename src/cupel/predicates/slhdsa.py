@@ -109,10 +109,32 @@ def _sig_length(case, group):
 
 
 def _pk_length(case, group):
-    sig = hexbytes(case.get("pk"))
-    if sig is None:
+    """SP 800-89 key validation: the public key is 2n bytes.
+
+    Deliberately NOT anchored to Algorithm 20. FIPS 205 Section 3.1 states that
+    where public-key validation is required, implementations shall verify the
+    public key is 2n bytes. That is a key-validation obligation, not part of the
+    signature verification path, and citing it as Algorithm 20 would overstate
+    what that algorithm mandates.
+    """
+    pk = hexbytes(case.get("pk"))
+    if pk is None:
         return None
-    return len(sig) != params_of(group).pk_bytes
+    return len(pk) != params_of(group).pk_bytes
+
+
+def _ctx_length(case, group):
+    """FIPS 205 Algorithms 24 and 25 line 1: reject when |ctx| > 255.
+
+    External signature interface only. The internal interface takes no context,
+    so the clause does not apply there rather than being satisfied by it.
+    """
+    if group.get("signatureInterface") == "internal":
+        return None
+    ctx = case.get("context")
+    if ctx is None:
+        return None
+    return len(ctx) // 2 > 255
 
 
 PREDICATES = [
@@ -123,10 +145,16 @@ PREDICATES = [
         fn=_sig_length,
     ),
     Predicate(
-        clause_id="fips205.alg20.pk-length",
-        algorithm="SLH-DSA", doc="FIPS-205", anchor="Section 9.1, public key format",
+        clause_id="fips205.s3.1.pk-length",
+        algorithm="SLH-DSA", doc="FIPS-205", anchor="Section 3.1, key checks (SP 800-89)",
         title="public key is 2n bytes",
         fn=_pk_length,
+    ),
+    Predicate(
+        clause_id="fips205.alg24.ctx-length",
+        algorithm="SLH-DSA", doc="FIPS-205", anchor="Section 10.2, Algorithms 24 and 25 line 1",
+        title="context string is at most 255 bytes",
+        fn=_ctx_length,
     ),
 ]
 

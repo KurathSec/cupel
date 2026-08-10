@@ -166,6 +166,27 @@ def section_disposition() -> dict:
     return {"defined": True, "n_members": len(rows), "n_planned_absent": len(planned)}
 
 
+def section_candidates() -> dict:
+    """D1b: the candidate clause set, derived from definitions rather than tags."""
+    _rule("Clause candidates (D1b, from definitions)")
+    rows = _rows(DATA / "clauses" / "generated" / "candidates.jsonl")
+    if not rows:
+        print(f"  candidates: {NA} (derivation not yet run)")
+        return {"defined": False}
+    inb = [r for r in rows if r.get("proposed_surface") == "api_boundary_checkable"]
+    untagged = [r for r in inb if not r.get("tagged")]
+    undecided = [r for r in rows if r.get("proposed_surface") is None]
+    print(count("  definitions at the module surface", len(rows)))
+    print(Rate(len(inb), len(rows), "  proposed boundary-checkable").render())
+    print(Rate(len(untagged), len(inb), "  of those, carrying no citation").render())
+    print(count("  needing a recorded decision", len(undecided)))
+    print("  A tag-based derivation cannot see the untagged ones, which is why D1")
+    print("  supplies provenance and this supplies the candidate set.")
+    return {"defined": True, "n_candidates": len(rows), "n_in_scope": len(inb),
+            "n_untagged_in_scope": len(untagged), "n_undecided": len(undecided),
+            "reconciled": not undecided}
+
+
 def section_clauses() -> dict:
     """The denominator, and whether it is yet allowed to be one."""
     _rule("Clause denominator")
@@ -361,6 +382,7 @@ SECTIONS = {
     "corpus": section_corpus,
     "reasons": section_reasons,
     "disposition": section_disposition,
+    "candidates": section_candidates,
     "clauses": section_clauses,
     "verdicts": section_verdicts,
     "misattribution": section_misattribution,
