@@ -4,8 +4,9 @@
 # takes both from the release itself, and a hand-maintained copy here would only
 # drift.
 #
-# Add the concept DOI under `identifiers` after the first release is archived.
-# Zenodo mints it then, and it always resolves to the newest version.
+# The version DOI below was reserved on Zenodo before upload, which is why it can
+# appear in the archived files themselves. The CONCEPT DOI, which always resolves
+# to the newest version, is issued at publication and is added here afterwards.
 #
 # NOTE for anyone editing this file: bin/namecheck.py scans it. Keep the
 # vocabulary to what this project measures.
@@ -31,6 +32,10 @@ abstract: >-
 type: software
 license: "MIT"
 repository-code: "https://github.com/KurathSec/cupel"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21880236"
+    description: "Version DOI for v0.1.0, reserved before upload"
 authors:
   - given-names: "Yuxiang"
     family-names: "Ji"
