@@ -58,9 +58,23 @@ jobs:
       - name: Forbidden vocabulary in commit messages (pull request)
         if: github.event_name == 'pull_request'
         run: python bin/namecheck.py --commits origin/${{ github.base_ref }}..HEAD
+      # `github.event.before` is all zeros when a branch is created, and points
+      # at a commit that no longer exists after a force-push or a history
+      # rewrite. Both make the range unresolvable, and the first one failed this
+      # job on the very first push to a recreated repository. Fall back to
+      # scanning everything reachable from HEAD, which is cheap and is the
+      # stronger check anyway.
       - name: Forbidden vocabulary in commit messages (push)
         if: github.event_name == 'push'
-        run: python bin/namecheck.py --commits ${{ github.event.before }}..HEAD
+        run: |
+          before='${{ github.event.before }}'
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+            echo "no resolvable previous tip; scanning every commit reachable from HEAD"
+            python bin/namecheck.py --commits HEAD
+          else
+            python bin/namecheck.py --commits "$before..HEAD"
+          fi
 
   test:
     runs-on: ubuntu-latest
