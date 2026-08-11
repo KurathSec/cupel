@@ -4,9 +4,11 @@
 # takes both from the release itself, and a hand-maintained copy here would only
 # drift.
 #
-# The version DOI below was reserved on Zenodo before upload, which is why it can
-# appear in the archived files themselves. The CONCEPT DOI, which always resolves
-# to the newest version, is issued at publication and is added here afterwards.
+# Two DOIs, and the order matters. The concept DOI resolves to whatever the
+# newest release is and is what a paper should cite. The version DOI pins a
+# reader to v0.1.0 and stops being the right citation the moment there is a
+# v0.2.0. The version DOI was reserved before upload so it could appear inside
+# the archived files; the concept DOI is issued at publication.
 #
 # NOTE for anyone editing this file: bin/namecheck.py scans it. Keep the
 # vocabulary to what this project measures.
@@ -34,8 +36,11 @@ license: "MIT"
 repository-code: "https://github.com/KurathSec/cupel"
 identifiers:
   - type: doi
+    value: "10.5281/zenodo.21880235"
+    description: "Concept DOI (always resolves to the latest release); cite this one"
+  - type: doi
     value: "10.5281/zenodo.21880236"
-    description: "Version DOI for v0.1.0, reserved before upload"
+    description: "Version DOI for v0.1.0"
 authors:
   - given-names: "Yuxiang"
     family-names: "Ji"
