@@ -148,6 +148,23 @@ files = [
   "SLHDSASignatureDisposition.cs",
 ]
 
+# The documents that MANDATE the taxonomy the enums implement. Pinned because
+# the paper's lead claim is that the negative-case vocabulary is fixed by the
+# algorithm specification and not by one implementation, and everything else in
+# this repository that carries a claim is pinned by digest. Review pointed out
+# that this one was asserted in prose and measured nowhere.
+#
+# These are living Internet-Drafts served as HTML, so there is no commit to pin
+# to. What is recorded is the retrieval date and the sha256 of the bytes read,
+# which is the strongest thing available for a document with no version control
+# a third party can address.
+[acvp_server.algorithm_specs]
+base = "https://pages.nist.gov/ACVP"
+files = [
+  "draft-celi-acvp-ml-dsa.html",
+  "draft-celi-acvp-ml-kem.html",
+]
+
 # The producers behind those enums. A disposition names a failure mode; a
 # manipulator constructs it, and whether the two agree is a question about the
 # source rather than about any vector set.

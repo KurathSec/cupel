@@ -209,6 +209,44 @@ def _wit2():
                   f"joins to a constructed candidate")
 
 
+@control("MAN-1", "the generator's enums implement the mandated taxonomy")
+def _man1():
+    """D3 reads one implementation. D4 reads the documents that require it.
+
+    The paper's lead claim is that the negative-case vocabulary is fixed by the
+    ACVP algorithm specification, so the bound it yields is a property of the
+    programme rather than of one repository. That step was asserted in prose
+    until review pointed out it was the only unverified link in an artifact
+    that verifies everything else. It is checked here: for every function both
+    derivations describe, the set of negative labels must be identical.
+
+    A disagreement is not necessarily an error in this repository. It could
+    equally mean the specification moved, or that the generator has drifted
+    from it, and either is worth stopping for.
+    """
+    d3 = list(jsonl.read(DATA / "clauses" / "generated" / "derivation_d3.jsonl"))
+    d4 = list(jsonl.read(DATA / "clauses" / "generated" / "derivation_d4.jsonl"))
+    if not d3 or not d4:
+        return None, "D3 or D4 not yet derived"
+
+    def by_fn(rows, valid_key):
+        out = {}
+        for r in rows:
+            if r.get(valid_key) or r.get("planned_but_absent"):
+                continue
+            fn = (r.get("function") or "").lower().replace(" ", "")
+            out.setdefault(fn, set()).add((r.get("label") or "").strip().lower())
+        return out
+
+    impl, mandated = by_fn(d3, "is_valid"), by_fn(d4, "is_valid")
+    shared = sorted(set(impl) & set(mandated))
+    if not shared:
+        return False, "no function name is common to D3 and D4"
+    bad = [f for f in shared if impl[f] != mandated[f]]
+    return not bad, (f"{len(shared)} function(s) compared, {len(bad)} disagree"
+                     + (f": {bad}" if bad else ""))
+
+
 @control("ID-1", "every clause id in use is a registered id")
 def _id1():
     """WIT-1 compares each witness only against itself, so nine rows naming a

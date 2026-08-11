@@ -124,7 +124,43 @@ python -m cupel vectors fetch      # pinned vector data, hash-verified on read
 ```
 
 Without the substrates, control MUT-1 skips rather than passes and `cupel
-measure` refuses; `bin/selfcheck.py` says which. Set `CUPEL_OFFLINE=1` to work
+measure` refuses; `bin/selfcheck.py` says which.
+
+## Regenerating everything from the pins
+
+Artifact evaluation found this undocumented: the order had to be reconstructed
+by reading `src/cupel/cli/main.py`. It is the artifact's central claim, so it
+belongs here.
+
+```
+python -m cupel vectors fetch --release all --disposition   # ~108 MB, hash-verified
+python -m cupel vectors census --release all                # results/census.jsonl, reason_histogram.jsonl
+python -m cupel clauses spec                                # data/clauses/generated/clauses.jsonl      (D1)
+python -m cupel clauses defs                                # ...candidates.jsonl                       (D1b)
+python -m cupel clauses disposition                         # ...derivation_d3.jsonl, disposition_bounds (D3)
+python -m cupel clauses mandate                             # ...derivation_d4.jsonl                     (D4)
+python -m cupel clauses sites                               # ...derivation_d2.jsonl                     (D2)
+python -m cupel clauses reconcile                           # results/reconciliation.jsonl
+python -m cupel mechanics                                   # results/mechanism_landings.jsonl
+python -m cupel matrix --release all                        # results/violation_matrix.jsonl, columns, misattribution
+python -m cupel witness                                     # witness/direct.jsonl
+python -m cupel divergence                                  # results/divergence*.jsonl, z_margins.jsonl
+python -m cupel diff --from r2026-07-24 --to r2026-07-28    # results/diff_*.jsonl
+python -m cupel diff --from r2026-07-28 --to r2026-07-31
+python -m cupel measure --target mldsa-native --release r2026-07-31   # results/verdicts.jsonl
+python -m cupel measure --target mlkem-native --release all
+```
+
+`clauses sites` and both `measure` commands need the vendored substrates, and
+`measure` additionally needs `make` and a C compiler; it builds each target once
+per mutation and replays the corpus, so budget ten to twenty minutes per arm.
+Everything else runs from the cache alone.
+
+Two things worth knowing. `bin/*.py` run under a bare interpreter with no
+install, since they put `src/` on the path themselves; the `pip install` above is
+needed only for the `cupel` console script and for `pytest`. And under an
+editable install `python -m cupel` resolves to the installed tree regardless of
+the current directory, so run it from the repository you mean to modify. Set `CUPEL_OFFLINE=1` to work
 from a warm cache and fail loudly on a miss instead of reaching the network.
 
 Python 3.11 or newer. **No runtime third-party dependencies**, by design: stdlib only, no compiled

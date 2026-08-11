@@ -198,6 +198,61 @@ def cmd_clauses_disposition(args) -> int:
     return 0
 
 
+def cmd_clauses_mandate(args) -> int:
+    """Derivation D4: the taxonomy the ACVP algorithm specification mandates.
+
+    D3 reads one implementation's enums. This reads the documents that require
+    them, which is what lets the bound be a statement about the programme rather
+    than about a repository. Review found this step asserted in prose and
+    measured nowhere, which in a project whose rule is that a number does not
+    exist until a script regenerates it was the wrong place to have a gap.
+    """
+    import urllib.request
+
+    from ..clauses import derive_mandate as d4
+
+    pins = pinsmod.load()
+    spec = pins["acvp_server"].get("algorithm_specs")
+    if not spec:
+        print("cupel: no algorithm_specs pinned", file=sys.stderr)
+        return 1
+    cache = pinsmod.REPO / ".cache" / "specs"
+    cache.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for name in spec["files"]:
+        local = cache / name
+        if not local.exists():
+            url = f"{spec['base']}/{name}"
+            print(f"  fetching {url}")
+            with urllib.request.urlopen(url, timeout=60) as r:
+                local.write_bytes(r.read())
+        raw = local.read_text(encoding="utf-8", errors="replace")
+        rows += d4.parse(raw, name)
+
+    if not rows:
+        print("cupel: extracted no mandated modifications; the document shape "
+              "may have changed", file=sys.stderr)
+        return 3
+
+    by_fn = d4.negative_by_function(rows)
+    print(f"  {'function':26s} {'negative modifications mandated':>32s}")
+    for fn, labels in by_fn.items():
+        print(f"  {fn:26s} {len(labels):>32d}")
+        for l in labels:
+            print(f"      {l}")
+    digests = sorted({r.digest for r in rows})
+    print()
+    print(count("  documents parsed", len(spec["files"])))
+    for d in digests:
+        print(f"      {d}")
+
+    out = pinsmod.REPO / "data" / "clauses" / "generated" / "derivation_d4.jsonl"
+    jsonl.write(out, [r.as_record() for r in rows])
+    print(f"\nwrote {out.relative_to(pinsmod.REPO)} ({len(rows)} rows)")
+    return 0
+
+
 def cmd_clauses_spec(args) -> int:
     """Derivation D1: the tag-based extraction, retained as provenance.
 
@@ -850,6 +905,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_clauses_sites)
     p = csub.add_parser("reconcile", help="set the three derivations against each other")
     p.set_defaults(func=cmd_clauses_reconcile)
+    p = csub.add_parser("mandate",
+                        help="derivation D4: the taxonomy the ACVP spec mandates")
+    p.set_defaults(func=cmd_clauses_mandate)
+
     p = csub.add_parser("spec", help="derivation D1: tag-based extraction (provenance only)")
     p.set_defaults(func=cmd_clauses_spec)
 
